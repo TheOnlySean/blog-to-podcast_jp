@@ -179,4 +179,3 @@ async function handleRegularUrl(url, req, res) {
     });
   }
 }
-// Force deployment trigger Sun Jun 29 00:19:56 JST 2025
