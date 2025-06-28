@@ -28,26 +28,6 @@
             </div>
         </div>
 
-        <!-- API密钥配置 -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-            <h2 class="text-xl font-semibold mb-4 flex items-center">
-                <i class="fas fa-key text-yellow-500 mr-2"></i>
-                API密钥配置
-            </h2>
-            <div class="grid md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">OpenAI API Key</label>
-                    <input type="password" id="openaiKey" placeholder="sk-..." 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">MiniMax API Key</label>
-                    <input type="password" id="minimaxKey" placeholder="minimax-api-key..." 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-            </div>
-        </div>
-
         <div class="grid lg:grid-cols-2 gap-8">
             <!-- 输入区域 -->
             <div class="bg-white rounded-xl shadow-lg p-6">
@@ -68,16 +48,16 @@
 
                 <!-- 文本输入标签页 -->
                 <div id="textInput" class="tab-content">
-                    <textarea id="content" rows="8" placeholder="输入你想转换为日语对话播客的内容..." 
+                    <textarea id="content" rows="10" placeholder="输入你想转换为日语对话播客的内容..." 
                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"></textarea>
                     
                     <div class="mt-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">对话风格</label>
                         <select id="style" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="educational">教育性</option>
-                            <option value="conversational">对话性</option>
-                            <option value="interview">访谈型</option>
-                            <option value="narrative">叙述型</option>
+                            <option value="educational">教育性 - 适合学习内容</option>
+                            <option value="conversational">对话性 - 轻松聊天风格</option>
+                            <option value="interview">访谈型 - 问答互动风格</option>
+                            <option value="narrative">叙述型 - 故事讲述风格</option>
                         </select>
                     </div>
                 </div>
@@ -89,11 +69,20 @@
                     <button id="scrapeBtn" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors duration-200">
                         <i class="fas fa-download mr-2"></i>抓取内容
                     </button>
+                    <div class="mt-2 text-xs text-gray-500">
+                        支持博客、新闻、文章等网页内容抓取
+                    </div>
                 </div>
 
-                <button id="generateBtn" class="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white py-3 px-6 rounded-lg font-semibold mt-4 transition-all duration-200 shadow-lg">
+                <button id="generateBtn" class="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white py-3 px-6 rounded-lg font-semibold mt-6 transition-all duration-200 shadow-lg">
                     <i class="fas fa-magic mr-2"></i>生成对话播客
                 </button>
+                
+                <!-- 状态说明 -->
+                <div class="mt-4 text-xs text-gray-500 text-center">
+                    <i class="fas fa-shield-alt mr-1"></i>
+                    API密钥已安全配置在服务器端，无需手动输入
+                </div>
             </div>
 
             <!-- 结果显示区域 -->
@@ -107,7 +96,7 @@
                 <div id="loading" class="hidden text-center py-12">
                     <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mb-4"></div>
                     <p class="text-gray-600">正在生成对话播客...</p>
-                    <p class="text-sm text-gray-500 mt-2">这可能需要几分钟时间</p>
+                    <p class="text-sm text-gray-500 mt-2">AI正在创建双人对话脚本并生成语音</p>
                 </div>
 
                 <!-- 错误显示 -->
@@ -246,16 +235,14 @@
         generateBtn.addEventListener('click', async () => {
             const content = document.getElementById('content').value.trim();
             const style = document.getElementById('style').value;
-            const openaiKey = document.getElementById('openaiKey').value.trim();
-            const minimaxKey = document.getElementById('minimaxKey').value.trim();
 
             if (!content) {
                 alert('请输入内容');
                 return;
             }
 
-            if (!openaiKey) {
-                alert('请输入OpenAI API Key');
+            if (content.length < 100) {
+                alert('内容太短，请输入至少100字符的内容');
                 return;
             }
 
@@ -269,9 +256,7 @@
                 const response = await fetch('/api/generate', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'x-openai-key': openaiKey,
-                        'x-minimax-key': minimaxKey || ''
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         content,
