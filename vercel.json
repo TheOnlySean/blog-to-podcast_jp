@@ -40,7 +40,6 @@
       ]
     }
   ],
-  "regions": ["hkg1"],
   "buildCommand": null,
   "devCommand": null,
   "installCommand": null
