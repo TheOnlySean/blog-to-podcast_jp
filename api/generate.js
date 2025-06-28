@@ -104,7 +104,7 @@ export default async function handler(req, res) {
         };
 
         // 选择合适的日语语音ID
-        const selectedVoiceId = japaneseVoiceMapping[voice]?.[style] || 
+        const voiceId = japaneseVoiceMapping[voice]?.[style] || 
                                (voice === 'female' ? 'moss_audio_d3f65edb-4c57-11f0-acba-96daea575b6a' : 'moss_audio_eabf88cc-4c59-11f0-b862-46ba4da2d9df');
 
         const minimaxHost = process.env.MINIMAX_API_HOST || 'https://api.minimaxi.com';
@@ -115,7 +115,7 @@ export default async function handler(req, res) {
           text: script,
           stream: false,
           voice_setting: {
-            voice_id: selectedVoiceId,
+            voice_id: voiceId,
             speed: 1.0,
             vol: 1.0,
             pitch: 0,
@@ -132,7 +132,7 @@ export default async function handler(req, res) {
           }
         };
 
-        console.log('开始MiniMax异步语音合成，voice_id:', selectedVoiceId);
+        console.log('开始MiniMax异步语音合成，voice_id:', voiceId);
 
         // 创建异步TTS任务
         const ttsResponse = await fetch(`${minimaxHost}/v1/text_to_speech`, {
@@ -229,7 +229,7 @@ export default async function handler(req, res) {
         hasAudio: !!audioUrl,
         isAsyncTask: !!taskId,
         language: 'japanese',
-        voiceId: selectedVoiceId,
+        voiceId: voiceId,
         generatedAt: new Date().toISOString()
       }
     };
