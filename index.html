@@ -1,159 +1,402 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>日语播客生成器</title>
+    <title>🎙️ 日语对话播客生成器</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎙️</text></svg>">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        .loading { animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .dialogue-a { background: linear-gradient(90deg, #fef3c7, #fbbf24); }
+        .dialogue-b { background: linear-gradient(90deg, #dbeafe, #3b82f6); }
+        .audio-segment { transition: all 0.3s ease; }
+        .audio-segment:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <div class="container mx-auto px-4 py-8 max-w-4xl">
-        <div class="text-center mb-12">
-            <div class="gradient-bg inline-flex items-center justify-center w-20 h-20 rounded-full mb-6 shadow-lg">
-                <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4z"></path>
-                    <path d="M5.5 9.643a.75.75 0 00-1.5 0V10c0 3.06 2.29 5.585 5.25 5.954V17.5h-1.5a.75.75 0 000 1.5h4.5a.75.75 0 000-1.5H10.5v-1.546A6.001 6.001 0 0016 10v-.357a.75.75 0 00-1.5 0V10a4.5 4.5 0 01-9 0v-.357z"></path>
-                </svg>
+<body class="bg-gradient-to-br from-purple-50 to-blue-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- 头部 -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                🎙️ 日语对话播客生成器
+            </h1>
+            <p class="text-gray-600">将任何内容转换为自然的日语双人对话播客</p>
+            <div class="mt-4 flex justify-center space-x-4 text-sm text-gray-500">
+                <span class="flex items-center"><i class="fas fa-female text-pink-500 mr-1"></i> 主持人A (女性)</span>
+                <span class="flex items-center"><i class="fas fa-male text-blue-500 mr-1"></i> 主持人B (男性)</span>
+                <span class="flex items-center"><i class="fas fa-comments text-green-500 mr-1"></i> 一问一答对话</span>
             </div>
-            <h1 class="text-5xl font-bold text-gray-800 mb-4">日语播客生成器</h1>
-            <p class="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-                使用AI技术将任何内容转换为专业的日语播客
-            </p>
         </div>
 
-        <div class="bg-white rounded-xl shadow-lg p-8">
-            <form id="podcastForm" class="space-y-6">
+        <!-- API密钥配置 -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <i class="fas fa-key text-yellow-500 mr-2"></i>
+                API密钥配置
+            </h2>
+            <div class="grid md:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">输入内容 *</label>
-                    <textarea 
-                        id="content" 
-                        rows="8" 
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-vertical"
-                        placeholder="请输入或粘贴您要转换为播客的内容..."
-                        required
-                    ></textarea>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">OpenAI API Key</label>
+                    <input type="password" id="openaiKey" placeholder="sk-..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
-                
-                <div class="grid md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">播客风格</label>
-                        <select id="style" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                            <option value="educational">📚 教育性</option>
-                            <option value="conversational">💬 对话式</option>
-                            <option value="narrative">📖 叙述式</option>
-                            <option value="interview">🎤 访谈式</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">声音类型</label>
-                        <select id="voice" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                            <option value="female">👩 女性声音</option>
-                            <option value="male">👨 男性声音</option>
-                        </select>
-                    </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">MiniMax API Key</label>
+                    <input type="password" id="minimaxKey" placeholder="minimax-api-key..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
+            </div>
+        </div>
 
-                <div class="text-center">
-                    <button 
-                        type="submit" 
-                        class="gradient-bg text-white px-8 py-4 rounded-xl font-semibold text-lg hover:opacity-90 transform hover:scale-105 transition-all duration-200 shadow-lg"
-                    >
-                        <span id="btnText">🎙️ 生成日语播客</span>
-                        <div id="loader" class="loading hidden inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full ml-2"></div>
+        <div class="grid lg:grid-cols-2 gap-8">
+            <!-- 输入区域 -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-semibold mb-4 flex items-center">
+                    <i class="fas fa-edit text-blue-500 mr-2"></i>
+                    内容输入
+                </h2>
+                
+                <!-- 选项卡 -->
+                <div class="flex mb-4 bg-gray-100 rounded-lg p-1">
+                    <button id="textTab" class="tab-button active flex-1 py-2 px-4 rounded-md transition-all duration-200 font-medium">
+                        <i class="fas fa-keyboard mr-2"></i>文本输入
+                    </button>
+                    <button id="urlTab" class="tab-button flex-1 py-2 px-4 rounded-md transition-all duration-200 font-medium">
+                        <i class="fas fa-globe mr-2"></i>URL输入
                     </button>
                 </div>
-            </form>
-        </div>
 
-        <div id="results" class="mt-8 bg-white rounded-xl shadow-lg p-8 hidden">
-            <h3 class="text-2xl font-bold mb-6 text-center">🎉 生成结果</h3>
-            
-            <div class="mb-8">
-                <h4 class="text-lg font-semibold mb-4">📝 播客脚本</h4>
-                <div class="bg-gray-50 rounded-lg p-6 max-h-80 overflow-y-auto border">
-                    <pre id="scriptContent" class="whitespace-pre-wrap text-sm text-gray-800 leading-relaxed"></pre>
+                <!-- 文本输入标签页 -->
+                <div id="textInput" class="tab-content">
+                    <textarea id="content" rows="8" placeholder="输入你想转换为日语对话播客的内容..." 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"></textarea>
+                    
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">对话风格</label>
+                        <select id="style" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="educational">教育性</option>
+                            <option value="conversational">对话性</option>
+                            <option value="interview">访谈型</option>
+                            <option value="narrative">叙述型</option>
+                        </select>
+                    </div>
                 </div>
+
+                <!-- URL输入标签页 -->
+                <div id="urlInput" class="tab-content hidden">
+                    <input type="url" id="url" placeholder="输入网页URL..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4">
+                    <button id="scrapeBtn" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors duration-200">
+                        <i class="fas fa-download mr-2"></i>抓取内容
+                    </button>
+                </div>
+
+                <button id="generateBtn" class="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white py-3 px-6 rounded-lg font-semibold mt-4 transition-all duration-200 shadow-lg">
+                    <i class="fas fa-magic mr-2"></i>生成对话播客
+                </button>
             </div>
 
-            <div id="audioSection" class="hidden">
-                <h4 class="text-lg font-semibold mb-4">🎵 生成的音频</h4>
-                <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 border">
-                    <audio id="audioPlayer" controls class="w-full mb-4" preload="metadata">
-                        <source type="audio/mpeg">
-                        您的浏览器不支持音频播放器。
-                    </audio>
+            <!-- 结果显示区域 -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-semibold mb-4 flex items-center">
+                    <i class="fas fa-podcast text-purple-500 mr-2"></i>
+                    播客结果
+                </h2>
+                
+                <!-- 加载状态 -->
+                <div id="loading" class="hidden text-center py-12">
+                    <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mb-4"></div>
+                    <p class="text-gray-600">正在生成对话播客...</p>
+                    <p class="text-sm text-gray-500 mt-2">这可能需要几分钟时间</p>
                 </div>
-            </div>
-        </div>
 
-        <div id="errorAlert" class="mt-8 bg-red-50 border border-red-200 rounded-lg p-4 hidden">
-            <div class="flex items-center">
-                <div class="text-red-600 mr-3">⚠️</div>
-                <div class="text-red-800" id="errorMessage"></div>
+                <!-- 错误显示 -->
+                <div id="error" class="hidden bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                    <p class="text-red-600 font-medium">生成失败</p>
+                    <p id="errorMessage" class="text-red-500 text-sm mt-1"></p>
+                </div>
+
+                <!-- 成功结果 -->
+                <div id="result" class="hidden">
+                    <!-- 播客信息 -->
+                    <div class="bg-gradient-to-r from-purple-100 to-blue-100 rounded-lg p-4 mb-6">
+                        <div class="grid grid-cols-2 gap-4 text-center">
+                            <div>
+                                <div class="text-2xl font-bold text-purple-600" id="wordCount">0</div>
+                                <div class="text-sm text-gray-600">总字数</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-blue-600" id="duration">0</div>
+                                <div class="text-sm text-gray-600">预估时长(分钟)</div>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <div class="text-lg font-semibold text-gray-700" id="segmentInfo">对话片段数：0</div>
+                        </div>
+                    </div>
+
+                    <!-- 音频播放器区域 -->
+                    <div id="audioSection" class="mb-6">
+                        <h3 class="text-lg font-semibold mb-3 flex items-center">
+                            <i class="fas fa-headphones text-green-500 mr-2"></i>
+                            对话音频
+                        </h3>
+                        <div id="audioSegments" class="space-y-3">
+                            <!-- 音频片段将在这里动态生成 -->
+                        </div>
+                    </div>
+
+                    <!-- 对话脚本显示 -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-3 flex items-center">
+                            <i class="fas fa-scroll text-orange-500 mr-2"></i>
+                            对话脚本
+                        </h3>
+                        <div id="dialogueScript" class="space-y-2 max-h-96 overflow-y-auto border rounded-lg p-4">
+                            <!-- 对话内容将在这里显示 -->
+                        </div>
+                    </div>
+
+                    <!-- 完整脚本 -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3 flex items-center">
+                            <i class="fas fa-file-text text-gray-500 mr-2"></i>
+                            完整脚本
+                            <button id="copyScript" class="ml-2 text-sm bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition-colors">
+                                <i class="fas fa-copy"></i> 复制
+                            </button>
+                        </h3>
+                        <div id="fullScript" class="bg-gray-50 rounded-lg p-4 text-sm max-h-48 overflow-y-auto border font-mono"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        document.getElementById('podcastForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const content = document.getElementById('content').value;
+        // DOM元素
+        const textTab = document.getElementById('textTab');
+        const urlTab = document.getElementById('urlTab');
+        const textInput = document.getElementById('textInput');
+        const urlInput = document.getElementById('urlInput');
+        const generateBtn = document.getElementById('generateBtn');
+        const scrapeBtn = document.getElementById('scrapeBtn');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const result = document.getElementById('result');
+
+        // 标签页切换
+        textTab.addEventListener('click', () => switchTab('text'));
+        urlTab.addEventListener('click', () => switchTab('url'));
+
+        function switchTab(tab) {
+            if (tab === 'text') {
+                textTab.classList.add('active', 'bg-white', 'text-blue-600', 'shadow-sm');
+                textTab.classList.remove('text-gray-600');
+                urlTab.classList.remove('active', 'bg-white', 'text-blue-600', 'shadow-sm');
+                urlTab.classList.add('text-gray-600');
+                textInput.classList.remove('hidden');
+                urlInput.classList.add('hidden');
+            } else {
+                urlTab.classList.add('active', 'bg-white', 'text-blue-600', 'shadow-sm');
+                urlTab.classList.remove('text-gray-600');
+                textTab.classList.remove('active', 'bg-white', 'text-blue-600', 'shadow-sm');
+                textTab.classList.add('text-gray-600');
+                urlInput.classList.remove('hidden');
+                textInput.classList.add('hidden');
+            }
+        }
+
+        // 抓取网页内容
+        scrapeBtn.addEventListener('click', async () => {
+            const url = document.getElementById('url').value.trim();
+            if (!url) {
+                alert('请输入有效的URL');
+                return;
+            }
+
+            scrapeBtn.disabled = true;
+            scrapeBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>抓取中...';
+
+            try {
+                const response = await fetch('/api/scrape', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ url })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('content').value = data.content;
+                    switchTab('text');
+                    alert('网页内容抓取成功！');
+                } else {
+                    alert('抓取失败: ' + data.error);
+                }
+            } catch (err) {
+                alert('抓取失败: ' + err.message);
+            } finally {
+                scrapeBtn.disabled = false;
+                scrapeBtn.innerHTML = '<i class="fas fa-download mr-2"></i>抓取内容';
+            }
+        });
+
+        // 生成播客
+        generateBtn.addEventListener('click', async () => {
+            const content = document.getElementById('content').value.trim();
             const style = document.getElementById('style').value;
-            const voice = document.getElementById('voice').value;
-            
-            const btnText = document.getElementById('btnText');
-            const loader = document.getElementById('loader');
-            
-            btnText.textContent = '生成中...';
-            loader.classList.remove('hidden');
-            hideError();
-            document.getElementById('results').classList.add('hidden');
+            const openaiKey = document.getElementById('openaiKey').value.trim();
+            const minimaxKey = document.getElementById('minimaxKey').value.trim();
+
+            if (!content) {
+                alert('请输入内容');
+                return;
+            }
+
+            if (!openaiKey) {
+                alert('请输入OpenAI API Key');
+                return;
+            }
+
+            // 隐藏之前的结果
+            hideAllSections();
+            loading.classList.remove('hidden');
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>生成中...';
 
             try {
                 const response = await fetch('/api/generate', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ content, style, voice })
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-openai-key': openaiKey,
+                        'x-minimax-key': minimaxKey || ''
+                    },
+                    body: JSON.stringify({
+                        content,
+                        style,
+                        voice: 'dialogue'
+                    })
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
-                    document.getElementById('scriptContent').textContent = data.script;
-                    
-                    if (data.audioUrl) {
-                        document.getElementById('audioPlayer').src = data.audioUrl;
-                        document.getElementById('audioSection').classList.remove('hidden');
-                    }
-                    
-                    document.getElementById('results').classList.remove('hidden');
-                    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+                    displayDialogueResult(data);
                 } else {
-                    showError(data.error || '播客生成失败');
+                    showError(data.error || '生成失败');
                 }
-            } catch (error) {
-                showError('网络错误: ' + error.message);
+            } catch (err) {
+                showError('请求失败: ' + err.message);
             } finally {
-                btnText.textContent = '🎙️ 生成日语播客';
-                loader.classList.add('hidden');
+                loading.classList.add('hidden');
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '<i class="fas fa-magic mr-2"></i>生成对话播客';
             }
         });
 
-        function showError(message) {
-            document.getElementById('errorMessage').textContent = message;
-            document.getElementById('errorAlert').classList.remove('hidden');
+        // 显示对话播客结果
+        function displayDialogueResult(data) {
+            document.getElementById('wordCount').textContent = data.wordCount || 0;
+            document.getElementById('duration').textContent = data.duration || 0;
+            document.getElementById('segmentInfo').textContent = 
+                '对话片段数：' + (data.totalSegments || 0) + ' | 已生成音频：' + (data.processedSegments || 0);
+
+            displayAudioSegments(data.audioSegments || []);
+            displayDialogueScript(data.dialogueParts || []);
+            document.getElementById('fullScript').textContent = data.script || '';
+            result.classList.remove('hidden');
         }
 
-        function hideError() {
-            document.getElementById('errorAlert').classList.add('hidden');
+        // 显示音频片段
+        function displayAudioSegments(audioSegments) {
+            const container = document.getElementById('audioSegments');
+            container.innerHTML = '';
+
+            if (audioSegments.length === 0) {
+                container.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-volume-mute text-4xl mb-2"></i><p>暂无音频片段</p><p class="text-sm">音频生成可能需要更多时间</p></div>';
+                return;
+            }
+
+            audioSegments.forEach((segment, index) => {
+                const speakerInfo = segment.speaker === 'A' ? 
+                    { name: '主持人A', icon: 'fa-female', color: 'pink', bgColor: 'dialogue-a' } :
+                    { name: '主持人B', icon: 'fa-male', color: 'blue', bgColor: 'dialogue-b' };
+
+                const segmentHtml = '<div class="audio-segment ' + speakerInfo.bgColor + ' rounded-lg p-4 shadow-sm">' +
+                    '<div class="flex items-center justify-between mb-2">' +
+                    '<span class="font-semibold text-gray-700 flex items-center">' +
+                    '<i class="fas ' + speakerInfo.icon + ' text-' + speakerInfo.color + '-500 mr-2"></i>' +
+                    speakerInfo.name + ' - 片段 ' + (index + 1) +
+                    '</span>' +
+                    '<span class="text-xs text-gray-500">第' + (segment.order + 1) + '段</span>' +
+                    '</div>' +
+                    '<p class="text-sm text-gray-600 mb-3">' + segment.text.substring(0, 100) + (segment.text.length > 100 ? '...' : '') + '</p>' +
+                    '<audio controls class="w-full">' +
+                    '<source src="' + segment.audioUrl + '" type="audio/mpeg">' +
+                    '您的浏览器不支持音频播放。' +
+                    '</audio>' +
+                    '</div>';
+                container.insertAdjacentHTML('beforeend', segmentHtml);
+            });
         }
+
+        // 显示对话脚本
+        function displayDialogueScript(dialogueParts) {
+            const container = document.getElementById('dialogueScript');
+            container.innerHTML = '';
+
+            if (dialogueParts.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">暂无对话内容</p>';
+                return;
+            }
+
+            dialogueParts.forEach((part, index) => {
+                const speakerInfo = part.speaker === 'A' ? 
+                    { name: '主持人A', icon: 'fa-female', color: 'pink-500', bgClass: 'dialogue-a' } :
+                    { name: '主持人B', icon: 'fa-male', color: 'blue-500', bgClass: 'dialogue-b' };
+
+                const partHtml = '<div class="' + speakerInfo.bgClass + ' rounded-lg p-3 border-l-4 border-' + speakerInfo.color + '">' +
+                    '<div class="font-semibold text-gray-700 mb-1 flex items-center">' +
+                    '<i class="fas ' + speakerInfo.icon + ' text-' + speakerInfo.color + ' mr-2"></i>' +
+                    speakerInfo.name +
+                    '</div>' +
+                    '<p class="text-gray-700">' + part.text + '</p>' +
+                    '</div>';
+                container.insertAdjacentHTML('beforeend', partHtml);
+            });
+        }
+
+        // 复制脚本功能
+        document.getElementById('copyScript').addEventListener('click', () => {
+            const script = document.getElementById('fullScript').textContent;
+            navigator.clipboard.writeText(script).then(() => {
+                const btn = document.getElementById('copyScript');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> 已复制';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 2000);
+            });
+        });
+
+        // 辅助函数
+        function hideAllSections() {
+            loading.classList.add('hidden');
+            error.classList.add('hidden');
+            result.classList.add('hidden');
+        }
+
+        function showError(message) {
+            error.classList.remove('hidden');
+            document.getElementById('errorMessage').textContent = message;
+        }
+
+        // 样式
+        const style = document.createElement('style');
+        style.textContent = '.tab-button.active { background: white; color: #2563eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1); } .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }';
+        document.head.appendChild(style);
     </script>
 </body>
 </html>
