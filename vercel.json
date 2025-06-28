@@ -1,0 +1,14 @@
+{
+  "functions": {
+    "api/generate.js": {
+      "maxDuration": 300
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/index.html"
+    }
+  ],
+  "regions": ["hkg1"]
+}

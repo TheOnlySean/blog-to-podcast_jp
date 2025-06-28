@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日语播客生成器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎙️</text></svg>">
+    <style>
+        .loading { animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <div class="text-center mb-12">
+            <div class="gradient-bg inline-flex items-center justify-center w-20 h-20 rounded-full mb-6 shadow-lg">
+                <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4z"></path>
+                    <path d="M5.5 9.643a.75.75 0 00-1.5 0V10c0 3.06 2.29 5.585 5.25 5.954V17.5h-1.5a.75.75 0 000 1.5h4.5a.75.75 0 000-1.5H10.5v-1.546A6.001 6.001 0 0016 10v-.357a.75.75 0 00-1.5 0V10a4.5 4.5 0 01-9 0v-.357z"></path>
+                </svg>
+            </div>
+            <h1 class="text-5xl font-bold text-gray-800 mb-4">日语播客生成器</h1>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+                使用AI技术将任何内容转换为专业的日语播客
+            </p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-8">
+            <form id="podcastForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">输入内容 *</label>
+                    <textarea 
+                        id="content" 
+                        rows="8" 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-vertical"
+                        placeholder="请输入或粘贴您要转换为播客的内容..."
+                        required
+                    ></textarea>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">播客风格</label>
+                        <select id="style" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="educational">📚 教育性</option>
+                            <option value="conversational">💬 对话式</option>
+                            <option value="narrative">📖 叙述式</option>
+                            <option value="interview">🎤 访谈式</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">声音类型</label>
+                        <select id="voice" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="female">👩 女性声音</option>
+                            <option value="male">👨 男性声音</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <button 
+                        type="submit" 
+                        class="gradient-bg text-white px-8 py-4 rounded-xl font-semibold text-lg hover:opacity-90 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                    >
+                        <span id="btnText">🎙️ 生成日语播客</span>
+                        <div id="loader" class="loading hidden inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full ml-2"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div id="results" class="mt-8 bg-white rounded-xl shadow-lg p-8 hidden">
+            <h3 class="text-2xl font-bold mb-6 text-center">🎉 生成结果</h3>
+            
+            <div class="mb-8">
+                <h4 class="text-lg font-semibold mb-4">📝 播客脚本</h4>
+                <div class="bg-gray-50 rounded-lg p-6 max-h-80 overflow-y-auto border">
+                    <pre id="scriptContent" class="whitespace-pre-wrap text-sm text-gray-800 leading-relaxed"></pre>
+                </div>
+            </div>
+
+            <div id="audioSection" class="hidden">
+                <h4 class="text-lg font-semibold mb-4">🎵 生成的音频</h4>
+                <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 border">
+                    <audio id="audioPlayer" controls class="w-full mb-4" preload="metadata">
+                        <source type="audio/mpeg">
+                        您的浏览器不支持音频播放器。
+                    </audio>
+                </div>
+            </div>
+        </div>
+
+        <div id="errorAlert" class="mt-8 bg-red-50 border border-red-200 rounded-lg p-4 hidden">
+            <div class="flex items-center">
+                <div class="text-red-600 mr-3">⚠️</div>
+                <div class="text-red-800" id="errorMessage"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('podcastForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const content = document.getElementById('content').value;
+            const style = document.getElementById('style').value;
+            const voice = document.getElementById('voice').value;
+            
+            const btnText = document.getElementById('btnText');
+            const loader = document.getElementById('loader');
+            
+            btnText.textContent = '生成中...';
+            loader.classList.remove('hidden');
+            hideError();
+            document.getElementById('results').classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content, style, voice })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('scriptContent').textContent = data.script;
+                    
+                    if (data.audioUrl) {
+                        document.getElementById('audioPlayer').src = data.audioUrl;
+                        document.getElementById('audioSection').classList.remove('hidden');
+                    }
+                    
+                    document.getElementById('results').classList.remove('hidden');
+                    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    showError(data.error || '播客生成失败');
+                }
+            } catch (error) {
+                showError('网络错误: ' + error.message);
+            } finally {
+                btnText.textContent = '🎙️ 生成日语播客';
+                loader.classList.add('hidden');
+            }
+        });
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorAlert').classList.remove('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('errorAlert').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
