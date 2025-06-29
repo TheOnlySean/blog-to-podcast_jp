@@ -85,27 +85,28 @@ export default async function handler(req, res) {
     let audioUrl = null;
     let taskId = null;
     
+    // 使用用户提供的真实MiniMax日语语音ID (移到条件块外部)
+    const japaneseVoiceMapping = {
+      female: {
+        educational: 'moss_audio_d3f65edb-4c57-11f0-acba-96daea575b6a',
+        conversational: 'moss_audio_d3f65edb-4c57-11f0-acba-96daea575b6a', 
+        narrative: 'moss_audio_d3f65edb-4c57-11f0-acba-96daea575b6a',
+        interview: 'moss_audio_d3f65edb-4c57-11f0-acba-96daea575b6a'
+      },
+      male: {
+        educational: 'moss_audio_eabf88cc-4c59-11f0-b862-46ba4da2d9df',
+        conversational: 'moss_audio_eabf88cc-4c59-11f0-b862-46ba4da2d9df',
+        narrative: 'moss_audio_eabf88cc-4c59-11f0-b862-46ba4da2d9df', 
+        interview: 'moss_audio_eabf88cc-4c59-11f0-b862-46ba4da2d9df'
+      }
+    };
+
+    // 选择合适的日语语音ID
+    const voiceId = japaneseVoiceMapping[voice]?.[style] || 
+                           (voice === 'female' ? 'moss_audio_d3f65edb-4c57-11f0-acba-96daea575b6a' : 'moss_audio_eabf88cc-4c59-11f0-b862-46ba4da2d9df');
+    
     if (process.env.MINIMAX_API_KEY) {
       try {
-        // 使用用户提供的真实MiniMax日语语音ID
-        const japaneseVoiceMapping = {
-          female: {
-            educational: 'moss_audio_d3f65edb-4c57-11f0-acba-96daea575b6a',
-            conversational: 'moss_audio_d3f65edb-4c57-11f0-acba-96daea575b6a', 
-            narrative: 'moss_audio_d3f65edb-4c57-11f0-acba-96daea575b6a',
-            interview: 'moss_audio_d3f65edb-4c57-11f0-acba-96daea575b6a'
-          },
-          male: {
-            educational: 'moss_audio_eabf88cc-4c59-11f0-b862-46ba4da2d9df',
-            conversational: 'moss_audio_eabf88cc-4c59-11f0-b862-46ba4da2d9df',
-            narrative: 'moss_audio_eabf88cc-4c59-11f0-b862-46ba4da2d9df', 
-            interview: 'moss_audio_eabf88cc-4c59-11f0-b862-46ba4da2d9df'
-          }
-        };
-
-        // 选择合适的日语语音ID
-        const voiceId = japaneseVoiceMapping[voice]?.[style] || 
-                               (voice === 'female' ? 'moss_audio_d3f65edb-4c57-11f0-acba-96daea575b6a' : 'moss_audio_eabf88cc-4c59-11f0-b862-46ba4da2d9df');
 
         const minimaxHost = process.env.MINIMAX_API_HOST || 'https://api.minimaxi.com';
         
