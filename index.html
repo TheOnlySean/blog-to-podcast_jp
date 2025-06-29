@@ -75,13 +75,26 @@
                 </div>
 
                 <button id="generateBtn" class="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white py-3 px-6 rounded-lg font-semibold mt-6 transition-all duration-200 shadow-lg">
-                    <i class="fas fa-magic mr-2"></i>生成对话播客
+                                            <i class="fas fa-magic mr-2"></i>生成日语播客
+                </button>
+                
+                <!-- MiniMax API 测试按钮 -->
+                <button id="testMiniMaxBtn" class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-2 px-4 rounded-lg font-medium mt-3 transition-all duration-200 shadow-md text-sm">
+                    <i class="fas fa-flask mr-2"></i>测试 MiniMax API
                 </button>
                 
                 <!-- 状态说明 -->
                 <div class="mt-4 text-xs text-gray-500 text-center">
                     <i class="fas fa-shield-alt mr-1"></i>
                     API密钥已安全配置在服务器端，无需手动输入
+                </div>
+                
+                <!-- MiniMax 测试结果显示区域 -->
+                <div id="miniMaxTestResult" class="hidden mt-4 p-4 bg-gray-50 rounded-lg border">
+                    <h4 class="font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-flask text-orange-500 mr-2"></i>MiniMax API 测试结果
+                    </h4>
+                    <div id="miniMaxTestContent" class="text-sm text-gray-600"></div>
                 </div>
             </div>
 
@@ -95,8 +108,8 @@
                 <!-- 加载状态 -->
                 <div id="loading" class="hidden text-center py-12">
                     <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mb-4"></div>
-                    <p class="text-gray-600">正在生成对话播客...</p>
-                    <p class="text-sm text-gray-500 mt-2">AI正在创建双人对话脚本并生成语音</p>
+                    <p class="text-gray-600">正在生成日语播客...</p>
+                    <p class="text-sm text-gray-500 mt-2">AI正在创建播客脚本并生成日语语音</p>
                 </div>
 
                 <!-- 错误显示 -->
@@ -170,9 +183,14 @@
         const urlInput = document.getElementById('urlInput');
         const generateBtn = document.getElementById('generateBtn');
         const scrapeBtn = document.getElementById('scrapeBtn');
+        const testMiniMaxBtn = document.getElementById('testMiniMaxBtn');
         const loading = document.getElementById('loading');
         const error = document.getElementById('error');
         const result = document.getElementById('result');
+        
+        // 全局变量用于存储当前的音频片段状态
+        let currentAudioSegments = [];
+        let statusCheckInterval = null;
 
         // 标签页切换
         textTab.addEventListener('click', () => switchTab('text'));
@@ -195,6 +213,99 @@
                 textInput.classList.add('hidden');
             }
         }
+
+        // 测试MiniMax API
+        testMiniMaxBtn.addEventListener('click', async () => {
+            const testResultDiv = document.getElementById('miniMaxTestResult');
+            const testContentDiv = document.getElementById('miniMaxTestContent');
+            
+            testMiniMaxBtn.disabled = true;
+            testMiniMaxBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>测试中...';
+            
+            testResultDiv.classList.remove('hidden');
+            testContentDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin mr-2"></i>正在测试MiniMax API...</div>';
+            
+            try {
+                const testData = {
+                    text: 'こんにちは、皆さん。今日は素晴らしい一日ですね。',
+                    voice: 'female',
+                    style: 'educational'
+                };
+                
+                // 直接调用生成API但使用特殊标记来触发测试模式
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        content: testData.text,
+                        style: testData.style,
+                        voice: testData.voice,
+                        _test_mode: true
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    let resultHtml = '<div class="space-y-2">';
+                    resultHtml += '<div class="text-green-600"><i class="fas fa-check-circle mr-2"></i><strong>测试成功！</strong></div>';
+                    resultHtml += `<div><strong>脚本长度:</strong> ${data.script?.length || 0} 字符</div>`;
+                    resultHtml += `<div><strong>预估时长:</strong> ${data.duration || 0} 分钟</div>`;
+                    
+                    // 显示音频状态
+                    resultHtml += '<div class="mt-3"><strong>音频状态:</strong></div>';
+                    
+                    if (data.audioUrl) {
+                        resultHtml += '<div class="ml-4 text-green-600">';
+                        resultHtml += '• <i class="fas fa-check-circle mr-1"></i>音频生成成功';
+                        resultHtml += ` <span class="text-xs text-blue-500">[音频URL可用]</span>`;
+                        resultHtml += '</div>';
+                        
+                        // 添加音频播放器
+                        resultHtml += '<div class="mt-2 ml-4">';
+                        resultHtml += `<audio controls class="w-full max-w-md">`;
+                        resultHtml += `<source src="${data.audioUrl}" type="audio/mpeg">`;
+                        resultHtml += '您的浏览器不支持音频播放。';
+                        resultHtml += '</audio>';
+                        resultHtml += '</div>';
+                        
+                    } else if (data.taskId) {
+                        resultHtml += '<div class="ml-4 text-yellow-600">';
+                        resultHtml += '• <i class="fas fa-clock mr-1"></i>音频正在生成中';
+                        resultHtml += ` <span class="text-xs text-gray-500">[任务ID: ${data.taskId.substring(0, 8)}...]</span>`;
+                        resultHtml += '</div>';
+                        
+                    } else {
+                        resultHtml += '<div class="ml-4 text-gray-600">';
+                        resultHtml += '• <i class="fas fa-info-circle mr-1"></i>音频未生成';
+                        resultHtml += '</div>';
+                    }
+                    
+                    // 显示其他信息
+                    if (data.metadata) {
+                        resultHtml += '<div class="mt-3 text-sm text-gray-600">';
+                        resultHtml += `<strong>技术信息:</strong><br>`;
+                        resultHtml += `• 语音ID: ${data.metadata.voiceId || 'N/A'}<br>`;
+                        resultHtml += `• 语言: ${data.metadata.language || 'N/A'}<br>`;
+                        resultHtml += `• 是否异步任务: ${data.metadata.isAsyncTask ? '是' : '否'}`;
+                        resultHtml += '</div>';
+                    }
+                    
+                    resultHtml += '</div>';
+                    testContentDiv.innerHTML = resultHtml;
+                } else {
+                    testContentDiv.innerHTML = `<div class="text-red-600"><i class="fas fa-exclamation-circle mr-2"></i><strong>测试失败:</strong> ${data.error || '未知错误'}</div>`;
+                }
+                
+            } catch (err) {
+                testContentDiv.innerHTML = `<div class="text-red-600"><i class="fas fa-exclamation-triangle mr-2"></i><strong>测试异常:</strong> ${err.message}</div>`;
+            } finally {
+                testMiniMaxBtn.disabled = false;
+                testMiniMaxBtn.innerHTML = '<i class="fas fa-flask mr-2"></i>测试 MiniMax API';
+            }
+        });
 
         // 抓取网页内容
         scrapeBtn.addEventListener('click', async () => {
@@ -261,14 +372,14 @@
                     body: JSON.stringify({
                         content,
                         style,
-                        voice: 'dialogue'
+                        voice: 'female'
                     })
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
-                    displayDialogueResult(data);
+                    displayPodcastResult(data);
                 } else {
                     showError(data.error || '生成失败');
                 }
@@ -277,21 +388,138 @@
             } finally {
                 loading.classList.add('hidden');
                 generateBtn.disabled = false;
-                generateBtn.innerHTML = '<i class="fas fa-magic mr-2"></i>生成对话播客';
+                generateBtn.innerHTML = '<i class="fas fa-magic mr-2"></i>生成日语播客';
             }
         });
 
-        // 显示对话播客结果
-        function displayDialogueResult(data) {
+        // 显示播客结果
+        function displayPodcastResult(data) {
             document.getElementById('wordCount').textContent = data.wordCount || 0;
             document.getElementById('duration').textContent = data.duration || 0;
             document.getElementById('segmentInfo').textContent = 
-                '对话片段数：' + (data.totalSegments || 0) + ' | 已生成音频：' + (data.processedSegments || 0);
+                '脚本长度：' + (data.script?.length || 0) + ' 字符 | 音频状态：' + (data.audioUrl ? '已生成' : data.taskId ? '生成中' : '未生成');
 
-            displayAudioSegments(data.audioSegments || []);
-            displayDialogueScript(data.dialogueParts || []);
+            // 显示单个音频播放器
+            displaySingleAudio(data);
+            
+            // 隐藏对话相关的显示区域
+            document.getElementById('dialogueScript').innerHTML = '<p class="text-gray-500 text-center py-4">单人播客模式</p>';
+            
             document.getElementById('fullScript').textContent = data.script || '';
             result.classList.remove('hidden');
+            
+            // 如果有异步任务，启动状态检查
+            if (data.taskId) {
+                startSingleAudioStatusPolling(data.taskId);
+            }
+        }
+
+        // 显示单个音频播放器
+        function displaySingleAudio(data) {
+            const container = document.getElementById('audioSegments');
+            container.innerHTML = '';
+
+            if (data.audioUrl) {
+                const audioHtml = '<div class="bg-green-50 rounded-lg p-4 shadow-sm">' +
+                    '<div class="flex items-center justify-between mb-2">' +
+                    '<span class="font-semibold text-gray-700 flex items-center">' +
+                    '<i class="fas fa-microphone text-green-500 mr-2"></i>' +
+                    '日语播客音频' +
+                    '</span>' +
+                    '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">已完成</span>' +
+                    '</div>' +
+                    '<audio controls class="w-full">' +
+                    '<source src="' + data.audioUrl + '" type="audio/mpeg">' +
+                    '您的浏览器不支持音频播放。' +
+                    '</audio>' +
+                    '</div>';
+                container.innerHTML = audioHtml;
+            } else if (data.taskId) {
+                const loadingHtml = '<div class="bg-yellow-50 rounded-lg p-4 shadow-sm">' +
+                    '<div class="flex items-center justify-between mb-2">' +
+                    '<span class="font-semibold text-gray-700 flex items-center">' +
+                    '<i class="fas fa-clock text-yellow-500 mr-2"></i>' +
+                    '日语播客音频' +
+                    '</span>' +
+                    '<span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">生成中</span>' +
+                    '</div>' +
+                    '<div class="bg-yellow-100 border border-yellow-200 rounded-lg p-3 text-center">' +
+                    '<i class="fas fa-spinner fa-spin text-yellow-500 mr-2"></i>' +
+                    '<span class="text-yellow-700">音频正在生成中，任务ID: ' + data.taskId.substring(0, 8) + '...</span>' +
+                    '</div>' +
+                    '</div>';
+                container.innerHTML = loadingHtml;
+            } else {
+                container.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-volume-mute text-4xl mb-2"></i><p>暂无音频</p><p class="text-sm">音频生成可能失败或未启用</p></div>';
+            }
+        }
+
+        // 单个音频任务状态轮询
+        function startSingleAudioStatusPolling(taskId) {
+            if (!taskId) return;
+            
+            console.log('开始轮询单个音频任务:', taskId);
+            
+            // 清除之前的轮询
+            if (statusCheckInterval) {
+                clearInterval(statusCheckInterval);
+            }
+            
+            // 开始新的轮询，每10秒检查一次
+            statusCheckInterval = setInterval(() => checkSingleAudioStatus(taskId), 10000);
+            
+            // 立即执行一次检查
+            checkSingleAudioStatus(taskId);
+        }
+
+        async function checkSingleAudioStatus(taskId) {
+            try {
+                const response = await fetch('/api/check-audio-status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        taskIds: [taskId]
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.results && data.results.length > 0) {
+                        const result = data.results[0];
+                        
+                        if (result.status === 'Success' && result.audioUrl) {
+                            // 任务完成，更新显示
+                            console.log('音频生成完成:', result.audioUrl);
+                            displaySingleAudio({ audioUrl: result.audioUrl });
+                            
+                            // 停止轮询
+                            if (statusCheckInterval) {
+                                clearInterval(statusCheckInterval);
+                                statusCheckInterval = null;
+                            }
+                            
+                            // 更新统计信息
+                            document.getElementById('segmentInfo').textContent = 
+                                '脚本长度：' + (document.getElementById('fullScript').textContent.length || 0) + ' 字符 | 音频状态：已生成';
+                                
+                        } else if (result.status === 'Failed') {
+                            console.log('音频生成失败:', result.errorMessage);
+                            displaySingleAudio({ error: result.errorMessage });
+                            
+                            // 停止轮询
+                            if (statusCheckInterval) {
+                                clearInterval(statusCheckInterval);
+                                statusCheckInterval = null;
+                            }
+                        }
+                        // Processing状态继续轮询
+                    }
+                }
+            } catch (error) {
+                console.error('状态检查异常:', error);
+            }
         }
 
         // 显示音频片段
@@ -299,15 +527,55 @@
             const container = document.getElementById('audioSegments');
             container.innerHTML = '';
 
-            if (audioSegments.length === 0) {
-                container.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-volume-mute text-4xl mb-2"></i><p>暂无音频片段</p><p class="text-sm">音频生成可能需要更多时间</p></div>';
+            if (!audioSegments || audioSegments.length === 0) {
+                container.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-volume-mute text-4xl mb-2"></i><p>暂无音频片段</p><p class="text-sm">音频生成可能需要更多时间，或正在后台处理中</p></div>';
                 return;
             }
 
             audioSegments.forEach((segment, index) => {
-                const speakerInfo = segment.speaker === 'A' ? 
+                // 验证segment对象
+                if (!segment) {
+                    console.warn('跳过null segment，index:', index);
+                    return;
+                }
+
+                if (!segment.speaker) {
+                    console.warn('跳过缺少speaker的segment:', segment);
+                    return;
+                }
+
+                const speakerInfo = segment.speaker === '主持人A' ? 
                     { name: '主持人A', icon: 'fa-female', color: 'pink', bgColor: 'dialogue-a' } :
-                    { name: '主持人B', icon: 'fa-male', color: 'blue', bgColor: 'dialogue-b' };
+                    segment.speaker === '主持人B' ?
+                    { name: '主持人B', icon: 'fa-male', color: 'blue', bgColor: 'dialogue-b' } :
+                    { name: segment.speaker || 'Unknown', icon: 'fa-user', color: 'gray', bgColor: 'bg-gray-100' };
+
+                let statusBadge = '';
+                let audioPlayer = '';
+                
+                if (segment.status === 'completed' && segment.audioUrl) {
+                    statusBadge = '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">已完成</span>';
+                    audioPlayer = '<audio controls class="w-full">' +
+                        '<source src="' + segment.audioUrl + '" type="audio/mpeg">' +
+                        '您的浏览器不支持音频播放。' +
+                        '</audio>';
+                } else if (segment.status === 'pending' && segment.taskId) {
+                    statusBadge = '<span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">处理中</span>';
+                    audioPlayer = '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">' +
+                        '<i class="fas fa-clock text-yellow-500 mr-2"></i>' +
+                        '<span class="text-yellow-700">音频正在生成中，任务ID: ' + segment.taskId + '</span>' +
+                        '</div>';
+                } else if (segment.status === 'failed') {
+                    statusBadge = '<span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">失败</span>';
+                    audioPlayer = '<div class="bg-red-50 border border-red-200 rounded-lg p-3 text-center text-red-600">' +
+                        '<i class="fas fa-exclamation-triangle mr-2"></i>音频生成失败' +
+                        '</div>';
+                } else {
+                    statusBadge = '<span class="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full">未知状态</span>';
+                    audioPlayer = '<div class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center text-gray-600">' +
+                        '<i class="fas fa-question-circle mr-2"></i>音频状态未知' +
+                        '</div>';
+                }
 
                 const segmentHtml = '<div class="audio-segment ' + speakerInfo.bgColor + ' rounded-lg p-4 shadow-sm">' +
                     '<div class="flex items-center justify-between mb-2">' +
@@ -315,42 +583,177 @@
                     '<i class="fas ' + speakerInfo.icon + ' text-' + speakerInfo.color + '-500 mr-2"></i>' +
                     speakerInfo.name + ' - 片段 ' + (index + 1) +
                     '</span>' +
-                    '<span class="text-xs text-gray-500">第' + (segment.order + 1) + '段</span>' +
+                    statusBadge +
                     '</div>' +
                     '<p class="text-sm text-gray-600 mb-3">' + segment.text.substring(0, 100) + (segment.text.length > 100 ? '...' : '') + '</p>' +
-                    '<audio controls class="w-full">' +
-                    '<source src="' + segment.audioUrl + '" type="audio/mpeg">' +
-                    '您的浏览器不支持音频播放。' +
-                    '</audio>' +
+                    audioPlayer +
                     '</div>';
                 container.insertAdjacentHTML('beforeend', segmentHtml);
             });
         }
 
         // 显示对话脚本
-        function displayDialogueScript(dialogueParts) {
+        function displayDialogueScript(dialogues) {
             const container = document.getElementById('dialogueScript');
             container.innerHTML = '';
 
-            if (dialogueParts.length === 0) {
+            if (!dialogues || dialogues.length === 0) {
                 container.innerHTML = '<p class="text-gray-500 text-center py-4">暂无对话内容</p>';
                 return;
             }
 
-            dialogueParts.forEach((part, index) => {
-                const speakerInfo = part.speaker === 'A' ? 
-                    { name: '主持人A', icon: 'fa-female', color: 'pink-500', bgClass: 'dialogue-a' } :
-                    { name: '主持人B', icon: 'fa-male', color: 'blue-500', bgClass: 'dialogue-b' };
+            dialogues.forEach((dialogue, index) => {
+                // 验证dialogue对象
+                if (!dialogue) {
+                    console.warn('跳过null dialogue，index:', index);
+                    return;
+                }
 
-                const partHtml = '<div class="' + speakerInfo.bgClass + ' rounded-lg p-3 border-l-4 border-' + speakerInfo.color + '">' +
+                if (!dialogue.speaker) {
+                    console.warn('跳过缺少speaker的dialogue:', dialogue);
+                    return;
+                }
+
+                const speakerInfo = dialogue.speaker === '主持人A' ? 
+                    { name: '主持人A', icon: 'fa-female', color: 'pink-500', bgClass: 'dialogue-a' } :
+                    dialogue.speaker === '主持人B' ?
+                    { name: '主持人B', icon: 'fa-male', color: 'blue-500', bgClass: 'dialogue-b' } :
+                    { name: dialogue.speaker || 'Unknown', icon: 'fa-user', color: 'gray-500', bgClass: 'bg-gray-100' };
+
+                const partHtml = '<div class="' + speakerInfo.bgClass + ' rounded-lg p-3 border-l-4 border-' + speakerInfo.color + ' mb-2">' +
                     '<div class="font-semibold text-gray-700 mb-1 flex items-center">' +
                     '<i class="fas ' + speakerInfo.icon + ' text-' + speakerInfo.color + ' mr-2"></i>' +
-                    speakerInfo.name +
+                    speakerInfo.name + ' <span class="ml-2 text-xs text-gray-500">(第' + (index + 1) + '段)</span>' +
                     '</div>' +
-                    '<p class="text-gray-700">' + part.text + '</p>' +
+                    '<p class="text-gray-700">' + dialogue.text + '</p>' +
                     '</div>';
                 container.insertAdjacentHTML('beforeend', partHtml);
             });
+        }
+
+        // 音频状态轮询相关函数
+        function startAudioStatusPolling() {
+            const pendingTasks = currentAudioSegments.filter(segment => 
+                segment.status === 'pending' && segment.taskId
+            );
+            
+            if (pendingTasks.length === 0) {
+                return; // 没有pending的任务，不需要轮询
+            }
+            
+            console.log('开始轮询', pendingTasks.length, '个pending音频任务');
+            
+            // 清除之前的轮询
+            if (statusCheckInterval) {
+                clearInterval(statusCheckInterval);
+            }
+            
+            // 开始新的轮询，每10秒检查一次
+            statusCheckInterval = setInterval(checkAudioStatus, 10000);
+            
+            // 立即执行一次检查
+            checkAudioStatus();
+        }
+
+        async function checkAudioStatus() {
+            const pendingTasks = currentAudioSegments.filter(segment => 
+                segment.status === 'pending' && segment.taskId
+            );
+            
+            if (pendingTasks.length === 0) {
+                // 没有pending的任务了，停止轮询
+                if (statusCheckInterval) {
+                    clearInterval(statusCheckInterval);
+                    statusCheckInterval = null;
+                }
+                return;
+            }
+            
+            const taskIds = pendingTasks.map(task => task.taskId);
+            
+            try {
+                const response = await fetch('/api/check-audio-status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        taskIds: taskIds
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        updateAudioSegmentStatus(data.results);
+                        
+                        // 如果还有processing的任务，继续轮询
+                        const stillProcessing = data.results.filter(r => r.status === 'Processing').length;
+                        console.log('状态检查完成，仍在处理中:', stillProcessing, '个任务');
+                        
+                        if (stillProcessing === 0) {
+                            // 所有任务都完成了，停止轮询
+                            if (statusCheckInterval) {
+                                clearInterval(statusCheckInterval);
+                                statusCheckInterval = null;
+                            }
+                        }
+                    }
+                } else {
+                    console.error('状态检查失败:', await response.text());
+                }
+            } catch (error) {
+                console.error('状态检查异常:', error);
+            }
+        }
+
+        function updateAudioSegmentStatus(statusResults) {
+            let hasUpdates = false;
+            
+            if (!statusResults || !Array.isArray(statusResults)) {
+                console.warn('Invalid statusResults:', statusResults);
+                return;
+            }
+            
+            statusResults.forEach(result => {
+                if (!result || !result.taskId) {
+                    console.warn('跳过invalid result:', result);
+                    return;
+                }
+
+                const segmentIndex = currentAudioSegments.findIndex(segment => 
+                    segment && segment.taskId === result.taskId
+                );
+                
+                if (segmentIndex !== -1 && currentAudioSegments[segmentIndex]) {
+                    const oldStatus = currentAudioSegments[segmentIndex].status;
+                    
+                    if (result.status === 'Success' && result.audioUrl) {
+                        currentAudioSegments[segmentIndex].status = 'completed';
+                        currentAudioSegments[segmentIndex].audioUrl = result.audioUrl;
+                        hasUpdates = true;
+                    } else if (result.status === 'Failed' || result.status === 'error') {
+                        currentAudioSegments[segmentIndex].status = 'failed';
+                        currentAudioSegments[segmentIndex].errorMessage = result.errorMessage;
+                        hasUpdates = true;
+                    }
+                    // Processing状态保持不变
+                    
+                    if (oldStatus !== currentAudioSegments[segmentIndex].status) {
+                        console.log(`任务 ${result.taskId} 状态从 ${oldStatus} 更新为 ${currentAudioSegments[segmentIndex].status}`);
+                    }
+                }
+            });
+            
+            if (hasUpdates) {
+                // 重新渲染音频片段
+                displayAudioSegments(currentAudioSegments);
+                
+                // 更新统计信息
+                const completedCount = currentAudioSegments.filter(s => s.status === 'completed').length;
+                document.getElementById('segmentInfo').textContent = 
+                    '对话片段数：' + currentAudioSegments.length + ' | 已生成音频：' + completedCount;
+            }
         }
 
         // 复制脚本功能
@@ -377,6 +780,29 @@
             error.classList.remove('hidden');
             document.getElementById('errorMessage').textContent = message;
         }
+
+        // 页面卸载时清理定时器
+        window.addEventListener('beforeunload', () => {
+            if (statusCheckInterval) {
+                clearInterval(statusCheckInterval);
+            }
+        });
+
+        // 页面隐藏时暂停轮询，显示时恢复
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                // 页面隐藏，暂停轮询
+                if (statusCheckInterval) {
+                    clearInterval(statusCheckInterval);
+                    statusCheckInterval = null;
+                }
+            } else {
+                // 页面显示，如果有pending任务则恢复轮询
+                if (currentAudioSegments.some(s => s.status === 'pending')) {
+                    startAudioStatusPolling();
+                }
+            }
+        });
 
         // 样式
         const style = document.createElement('style');
