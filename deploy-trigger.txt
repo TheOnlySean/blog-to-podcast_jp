@@ -1,3 +1,5 @@
 Sun Jun 29 00:20:09 JST 2025
 Sun Jun 29 02:05:31 JST 2025: Firecrawl优先抓取策略已部署
 Fix voiceId undefined error - Sun Jun 29 02:33:43 JST 2025
+
+Deploy trigger: 2024-12-19 17:30:00 - 修复voiceId作用域问题
