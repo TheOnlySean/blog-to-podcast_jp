@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { content, style = 'educational', voice = 'female' } = req.body;
+    const { content, style = 'educational', voice = 'female', _test_mode = false } = req.body;
     
     if (!content || content.trim().length === 0) {
       return res.status(400).json({ error: '请提供内容' });
@@ -50,7 +50,7 @@ export default async function handler(req, res) {
 4. 聴衆との対話要素を含む（「皆さん」「いかがでしょうか」など）
 5. 開始、主要内容、結語の構造を持つ
 6. 読み上げやすい文章構造
-7. 約10-15分の長さ（約2000-3000字）
+7. 約8-12分の長さ（約1500-2500字）
 
 特別注意：
 - 読み上げ時に自然に聞こえるよう、漢字にふりがなが必要な場合は括弧で追記
@@ -81,77 +81,46 @@ export default async function handler(req, res) {
 
     console.log('脚本生成成功，长度:', script.length);
 
-    // 第二步：使用MiniMax异步长文本语音合成 - 真实的日语语音ID
+    // 第二步：使用MiniMax Text-to-Audio API（基于官方MCP-JS实现）
     let audioUrl = null;
     let taskId = null;
     
-    // 使用用户提供的真实MiniMax日语语音ID (移到条件块外部)
-    const japaneseVoiceMapping = {
-      female: {
-        educational: 'moss_audio_d3f65edb-4c57-11f0-acba-96daea575b6a',
-        conversational: 'moss_audio_d3f65edb-4c57-11f0-acba-96daea575b6a', 
-        narrative: 'moss_audio_d3f65edb-4c57-11f0-acba-96daea575b6a',
-        interview: 'moss_audio_d3f65edb-4c57-11f0-acba-96daea575b6a'
-      },
-      male: {
-        educational: 'moss_audio_eabf88cc-4c59-11f0-b862-46ba4da2d9df',
-        conversational: 'moss_audio_eabf88cc-4c59-11f0-b862-46ba4da2d9df',
-        narrative: 'moss_audio_eabf88cc-4c59-11f0-b862-46ba4da2d9df', 
-        interview: 'moss_audio_eabf88cc-4c59-11f0-b862-46ba4da2d9df'
-      }
+    // 基于MiniMax-MCP-JS的语音映射
+    const voiceMapping = {
+      female: 'female-shaonv', // 官方推荐的女性日语语音
+      male: 'male-qn-qingse'   // 官方推荐的男性日语语音
     };
-
-    // 选择合适的日语语音ID，添加详细的fallback逻辑
-    let voiceId;
     
-    // 首先尝试从映射中获取
-    if (japaneseVoiceMapping[voice] && japaneseVoiceMapping[voice][style]) {
-      voiceId = japaneseVoiceMapping[voice][style];
-    } else {
-      // 如果映射失败，使用默认值
-      voiceId = (voice === 'female') ? 
-        'moss_audio_d3f65edb-4c57-11f0-acba-96daea575b6a' : 
-        'moss_audio_eabf88cc-4c59-11f0-b862-46ba4da2d9df';
-    }
-    
-    // 最后的安全检查
-    if (!voiceId) {
-      voiceId = 'moss_audio_d3f65edb-4c57-11f0-acba-96daea575b6a'; // 默认使用女性声音
-    }
-    
-    console.log('选择的语音ID:', voiceId, '语音类型:', voice, '风格:', style);
+    const selectedVoiceId = voiceMapping[voice] || 'female-shaonv';
     
     if (process.env.MINIMAX_API_KEY) {
       try {
-
-        const minimaxHost = process.env.MINIMAX_API_HOST || 'https://api.minimaxi.com';
+        // 使用MiniMax-MCP-JS推荐的API主机
+        const minimaxHost = process.env.MINIMAX_API_HOST || 'https://api.minimaxi.chat';
         
-        // 根据MiniMax异步长文本语音合成API格式
+        console.log('使用MiniMax API主机:', minimaxHost);
+        console.log('使用语音ID:', selectedVoiceId);
+        
+        // 基于官方MiniMax-MCP-JS的text_to_audio参数格式
         const ttsPayload = {
-          model: 'speech-01-turbo',
           text: script,
-          stream: false,
-          voice_setting: {
-            voice_id: voiceId,
-            speed: 1.0,
-            vol: 1.0,
-            pitch: 0,
-            emotion: 'neutral'
-          },
-          audio_setting: {
-            sample_rate: 32000,
-            bitrate: 128000,
-            format: 'mp3',
-            channel: 1
-          },
-          pronunciation_setting: {
-            language: 'ja'
-          }
+          model: 'speech-02-hd', // 使用最新的高质量模型
+          voiceId: selectedVoiceId,
+          speed: 1.0,
+          vol: 1.0,
+          pitch: 0,
+          emotion: 'neutral',
+          format: 'mp3',
+          sampleRate: 32000,
+          bitrate: 128000,
+          channel: 1,
+          languageBoost: 'ja', // 日语增强
+          stream: false
         };
 
-        console.log('开始MiniMax异步语音合成，voice_id:', voiceId);
+        console.log('开始MiniMax文本转语音，使用官方MCP参数格式');
 
-        // 创建异步TTS任务
+        // 调用MiniMax Text-to-Speech API
         const ttsResponse = await fetch(`${minimaxHost}/v1/text_to_speech`, {
           method: 'POST',
           headers: {
@@ -161,23 +130,33 @@ export default async function handler(req, res) {
           body: JSON.stringify(ttsPayload)
         });
 
+        const responseText = await ttsResponse.text();
+        console.log('MiniMax API响应状态:', ttsResponse.status);
+        console.log('MiniMax API响应内容:', responseText.substring(0, 200) + '...');
+
         if (ttsResponse.ok) {
-          const ttsResult = await ttsResponse.json();
+          let ttsResult;
+          try {
+            ttsResult = JSON.parse(responseText);
+          } catch (parseError) {
+            console.error('解析MiniMax响应JSON失败:', parseError);
+            throw new Error('MiniMax API响应格式错误');
+          }
           
           if (ttsResult.task_id) {
             // 异步任务模式
             taskId = ttsResult.task_id;
             console.log('MiniMax异步任务创建成功，task_id:', taskId);
             
-            // 轮询任务状态
+            // 轮询任务状态（简化版，最多尝试5次）
             let pollAttempts = 0;
-            const maxPollAttempts = 20; // 最多轮询20次（约3分钟）
+            const maxPollAttempts = 5;
             
             while (pollAttempts < maxPollAttempts) {
-              await new Promise(resolve => setTimeout(resolve, 8000)); // 等待8秒
+              await new Promise(resolve => setTimeout(resolve, 3000)); // 等待3秒
               
               try {
-                const statusResponse = await fetch(`${minimaxHost}/v1/text_to_speech/${taskId}`, {
+                const statusResponse = await fetch(`${minimaxHost}/v1/text_to_speech/task/${taskId}`, {
                   method: 'GET',
                   headers: {
                     'Authorization': `Bearer ${process.env.MINIMAX_API_KEY}`,
@@ -207,24 +186,34 @@ export default async function handler(req, res) {
               pollAttempts++;
             }
             
-            if (pollAttempts >= maxPollAttempts && !audioUrl) {
-              console.log('语音合成超时，但返回脚本');
-            }
-            
           } else if (ttsResult.audio_url) {
             // 同步模式 - 直接返回音频URL
             audioUrl = ttsResult.audio_url;
             console.log('MiniMax语音合成完成（同步模式）');
+            
+          } else if (ttsResult.data && ttsResult.data.audio_url) {
+            // 某些情况下音频URL在data字段中
+            audioUrl = ttsResult.data.audio_url;
+            console.log('MiniMax语音合成完成（data字段）');
+            
+          } else {
+            console.log('MiniMax响应格式不包含audio_url或task_id:', ttsResult);
           }
           
         } else {
-          const errorText = await ttsResponse.text();
-          console.error('MiniMax TTS API错误:', errorText);
+          console.error('MiniMax TTS API错误:', responseText);
+          
+          // 检查是否是API密钥问题
+          if (ttsResponse.status === 401) {
+            console.error('API密钥验证失败，请检查MINIMAX_API_KEY和MINIMAX_API_HOST是否匹配');
+          }
         }
         
       } catch (audioError) {
         console.error('音频生成过程出错:', audioError);
       }
+    } else {
+      console.log('未配置MINIMAX_API_KEY，跳过音频生成');
     }
 
     // 计算统计信息
@@ -246,8 +235,9 @@ export default async function handler(req, res) {
         hasAudio: !!audioUrl,
         isAsyncTask: !!taskId,
         language: 'japanese',
-        voiceId: voiceId,
-        generatedAt: new Date().toISOString()
+        voiceId: selectedVoiceId,
+        generatedAt: new Date().toISOString(),
+        mcpBased: true // 标记这是基于MCP的实现
       }
     };
 
