@@ -93,6 +93,11 @@ export default async function handler(req, res) {
     
     const selectedVoiceId = voiceMapping[voice] || 'female-shaonv';
     
+    // 🔍 调试日志：确认变量定义
+    console.log('调试检查 - selectedVoiceId:', selectedVoiceId);
+    console.log('调试检查 - voice:', voice);
+    console.log('调试检查 - voiceMapping:', voiceMapping);
+    
     if (process.env.MINIMAX_API_KEY) {
       try {
         // 使用MiniMax全球版API主机
@@ -235,9 +240,15 @@ export default async function handler(req, res) {
         hasAudio: !!audioUrl,
         isAsyncTask: !!taskId,
         language: 'japanese',
-        voiceId: selectedVoiceId,
+        voiceId: selectedVoiceId || 'female-shaonv', // 🔒 安全回退
+        selectedVoice: voice,
         generatedAt: new Date().toISOString(),
-        mcpBased: true // 标记这是基于MCP的实现
+        mcpBased: true, // 标记这是基于MCP的实现
+        debugInfo: {
+          voiceMapping: voiceMapping,
+          originalVoice: voice,
+          finalVoiceId: selectedVoiceId
+        }
       }
     };
 
