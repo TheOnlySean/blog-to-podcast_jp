@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceId 修复验证</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; max-width: 800px; }
+        .result { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { padding: 12px 24px; margin: 10px 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; white-space: pre-wrap; }
+        .loading { opacity: 0.7; }
+    </style>
+</head>
+<body>
+    <h1>🔒 VoiceId 修复验证工具</h1>
+    
+    <div class="info">
+        <h3>📋 测试目标</h3>
+        <p>验证 <code>voiceId is not defined</code> 错误是否已修复</p>
+        <p>检查调试日志和安全回退机制</p>
+    </div>
+    
+    <div>
+        <h3>🧪 测试用例</h3>
+        <button onclick="testVoiceId('female', 'educational')">测试女性语音</button>
+        <button onclick="testVoiceId('male', 'conversational')">测试男性语音</button>
+        <button onclick="testVoiceId('invalid', 'invalid')">测试无效参数</button>
+        <button onclick="testVoiceId('', '')">测试空参数</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        async function testVoiceId(voice, style) {
+            const resultsDiv = document.getElementById('results');
+            const testId = Date.now();
+            
+            // 添加加载状态
+            const loadingHtml = `
+                <div id="test-${testId}" class="result info loading">
+                    <h4>🔄 测试中: voice="${voice}", style="${style}"</h4>
+                    <p>正在调用 API...</p>
+                </div>
+            `;
+            resultsDiv.innerHTML = loadingHtml + resultsDiv.innerHTML;
+            
+            try {
+                const testData = {
+                    content: `こんにちは、皆さん。今日は${voice}音声と${style}スタイルのテストです。`,
+                    style: style || 'educational',
+                    voice: voice || 'female',
+                    _test_mode: true
+                };
+                
+                console.log('发送测试请求:', testData);
+                
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                const data = await response.json();
+                
+                let resultClass = 'success';
+                let statusIcon = '✅';
+                let title = 'VoiceId 测试成功！';
+                
+                if (!response.ok || !data.success) {
+                    resultClass = 'error';
+                    statusIcon = '❌';
+                    title = 'VoiceId 测试失败！';
+                }
+                
+                let resultHtml = `
+                    <div class="result ${resultClass}">
+                        <h4>${statusIcon} ${title} (voice="${voice}", style="${style}")</h4>
+                        <p><strong>响应状态:</strong> ${response.status} ${response.statusText}</p>
+                `;
+                
+                if (data.success) {
+                    resultHtml += `
+                        <p><strong>✅ VoiceId 状态:</strong> 已正确定义</p>
+                        <p><strong>🎵 选择的语音:</strong> ${data.metadata?.voiceId || 'Unknown'}</p>
+                        <p><strong>📊 脚本长度:</strong> ${data.script?.length || 0} 字符</p>
+                        <p><strong>🏷️ MCP 标记:</strong> ${data.metadata?.mcpBased ? '是' : '否'}</p>
+                    `;
+                    
+                    if (data.metadata?.debugInfo) {
+                        resultHtml += `
+                            <details>
+                                <summary><strong>🔍 调试信息</strong></summary>
+                                <pre>${JSON.stringify(data.metadata.debugInfo, null, 2)}</pre>
+                            </details>
+                        `;
+                    }
+                    
+                    if (data.audioUrl) {
+                        resultHtml += `<p><strong>🎵 音频:</strong> <a href="${data.audioUrl}" target="_blank">播放音频</a></p>`;
+                    } else if (data.taskId) {
+                        resultHtml += `<p><strong>⏳ 异步任务:</strong> ${data.taskId}</p>`;
+                    }
+                } else {
+                    resultHtml += `
+                        <p><strong>❌ 错误信息:</strong> ${data.error || '未知错误'}</p>
+                        <p><strong>📝 详细信息:</strong> ${data.details || '无'}</p>
+                    `;
+                }
+                
+                resultHtml += `
+                        <details>
+                            <summary><strong>📄 完整响应</strong></summary>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </details>
+                    </div>
+                `;
+                
+                document.getElementById(`test-${testId}`).outerHTML = resultHtml;
+                
+            } catch (error) {
+                const errorHtml = `
+                    <div class="result error">
+                        <h4>💥 网络错误: voice="${voice}", style="${style}"</h4>
+                        <p><strong>错误:</strong> ${error.message}</p>
+                        <p><strong>类型:</strong> ${error.name}</p>
+                    </div>
+                `;
+                document.getElementById(`test-${testId}`).outerHTML = errorHtml;
+            }
+        }
+        
+        // 页面加载时自动进行一次基本测试
+        window.addEventListener('load', () => {
+            setTimeout(() => testVoiceId('female', 'educational'), 1000);
+        });
+    </script>
+</body>
+</html> 
