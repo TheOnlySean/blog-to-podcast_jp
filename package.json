@@ -9,5 +9,9 @@
   },
   "keywords": ["japanese", "podcast", "ai", "openai", "minimax"],
   "author": "Your Name",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "ffmpeg-static": "^5.1.0",
+    "fluent-ffmpeg": "^2.1.2"
+  }
 }

@@ -1,174 +1,171 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎙️ 日语对话播客生成器</title>
+    <title>AI二人ポッドキャスト生成器 - ワンクリックで日本語ポッドキャスト</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .dialogue-a { background: linear-gradient(90deg, #fef3c7, #fbbf24); }
-        .dialogue-b { background: linear-gradient(90deg, #dbeafe, #3b82f6); }
-        .audio-segment { transition: all 0.3s ease; }
-        .audio-segment:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .audio-player {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .speaker-akira {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-left: 4px solid #ff6b6b;
+        }
+        .speaker-yuuki {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-left: 4px solid #4ecdc4;
+        }
+        .pulse-animation {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
     </style>
 </head>
-<body class="bg-gradient-to-br from-purple-50 to-blue-50 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
-        <!-- 头部 -->
-        <div class="text-center mb-8">
-            <h1 class="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
-                🎙️ 日语对话播客生成器
-            </h1>
-            <p class="text-gray-600">将任何内容转换为自然的日语双人对话播客</p>
-            <div class="mt-4 flex justify-center space-x-4 text-sm text-gray-500">
-                <span class="flex items-center"><i class="fas fa-female text-pink-500 mr-1"></i> 主持人A (女性)</span>
-                <span class="flex items-center"><i class="fas fa-male text-blue-500 mr-1"></i> 主持人B (男性)</span>
-                <span class="flex items-center"><i class="fas fa-comments text-green-500 mr-1"></i> 一问一答对话</span>
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="gradient-bg text-white py-8">
+            <div class="container mx-auto px-4 text-center">
+                <h1 class="text-4xl font-bold mb-2 flex items-center justify-center">
+                    <i class="fas fa-microphone-alt mr-3"></i>
+                    AI二人ポッドキャスト生成器
+                </h1>
+                <p class="text-xl opacity-90">ウェブリンクを入力して、アキラ & ユウキの日本語ポッドキャストをワンクリック生成</p>
+                <div class="mt-4 flex justify-center space-x-6 text-sm">
+                    <span><i class="fas fa-robot mr-2"></i>AI対話</span>
+                    <span><i class="fas fa-users mr-2"></i>二人パーソナリティ</span>
+                    <span><i class="fas fa-language mr-2"></i>日本語ポッドキャスト</span>
+                    <span><i class="fas fa-bolt mr-2"></i>ワンクリック生成</span>
+                </div>
             </div>
-        </div>
+        </header>
 
-        <div class="grid lg:grid-cols-2 gap-8">
-            <!-- 输入区域 -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-xl font-semibold mb-4 flex items-center">
-                    <i class="fas fa-edit text-blue-500 mr-2"></i>
-                    内容输入
-                </h2>
-                
-                <!-- 选项卡 -->
-                <div class="flex mb-4 bg-gray-100 rounded-lg p-1">
-                    <button id="textTab" class="tab-button active flex-1 py-2 px-4 rounded-md transition-all duration-200 font-medium">
-                        <i class="fas fa-keyboard mr-2"></i>文本输入
-                    </button>
-                    <button id="urlTab" class="tab-button flex-1 py-2 px-4 rounded-md transition-all duration-200 font-medium">
-                        <i class="fas fa-globe mr-2"></i>URL输入
-                    </button>
+        <div class="container mx-auto px-4 py-8 max-w-4xl">
+            <!-- 主要功能区 -->
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-2">🎙️ ポッドキャストを生成</h2>
+                    <p class="text-gray-600">ブログ記事から二人の日本語ポッドキャストまで、リンクひとつで</p>
                 </div>
 
-                <!-- 文本输入标签页 -->
-                <div id="textInput" class="tab-content">
-                    <textarea id="content" rows="10" placeholder="输入你想转换为日语对话播客的内容..." 
-                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"></textarea>
-                    
-                    <div class="mt-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">对话风格</label>
-                        <select id="style" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="educational">教育性 - 适合学习内容</option>
-                            <option value="conversational">对话性 - 轻松聊天风格</option>
-                            <option value="interview">访谈型 - 问答互动风格</option>
-                            <option value="narrative">叙述型 - 故事讲述风格</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- URL输入标签页 -->
-                <div id="urlInput" class="tab-content hidden">
-                    <input type="url" id="url" placeholder="输入网页URL..." 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4">
-                    <button id="scrapeBtn" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors duration-200">
-                        <i class="fas fa-download mr-2"></i>抓取内容
-                    </button>
+                <!-- URL输入区 -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-link mr-2"></i>ウェブリンク
+                    </label>
+                    <input 
+                        type="url" 
+                        id="urlInput" 
+                        placeholder="ブログ、ニュースや記事のURLを入力..." 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                    >
                     <div class="mt-2 text-xs text-gray-500">
-                        支持博客、新闻、文章等网页内容抓取
+                        <i class="fas fa-info-circle mr-1"></i>
+                        ブログ、ニュース、Wikipedia、Medium などのページに対応
                     </div>
                 </div>
 
-                <button id="generateBtn" class="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white py-3 px-6 rounded-lg font-semibold mt-6 transition-all duration-200 shadow-lg">
-                                            <i class="fas fa-magic mr-2"></i>生成日语播客
+                <!-- 生成按钮 -->
+                <button 
+                    id="generateBtn" 
+                    class="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white py-4 px-6 rounded-lg font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl"
+                >
+                    <i class="fas fa-magic mr-3"></i>
+                    二人ポッドキャストを生成
                 </button>
-                
-                <!-- MiniMax API 测试按钮 -->
-                <button id="testMiniMaxBtn" class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-2 px-4 rounded-lg font-medium mt-3 transition-all duration-200 shadow-md text-sm">
-                    <i class="fas fa-flask mr-2"></i>测试 MiniMax API
-                </button>
-                
-                <!-- 状态说明 -->
-                <div class="mt-4 text-xs text-gray-500 text-center">
-                    <i class="fas fa-shield-alt mr-1"></i>
-                    API密钥已安全配置在服务器端，无需手动输入
-                </div>
-                
-                <!-- MiniMax 测试结果显示区域 -->
-                <div id="miniMaxTestResult" class="hidden mt-4 p-4 bg-gray-50 rounded-lg border">
-                    <h4 class="font-semibold text-gray-700 mb-2">
-                        <i class="fas fa-flask text-orange-500 mr-2"></i>MiniMax API 测试结果
-                    </h4>
-                    <div id="miniMaxTestContent" class="text-sm text-gray-600"></div>
+
+                <!-- 进度指示器 -->
+                <div id="progressSection" class="hidden mt-6">
+                    <div class="bg-gray-100 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-700">進捗</span>
+                            <span id="progressText" class="text-sm text-gray-500">準備中...</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="progressBar" class="bg-blue-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- 结果显示区域 -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-xl font-semibold mb-4 flex items-center">
-                    <i class="fas fa-podcast text-purple-500 mr-2"></i>
-                    播客结果
-                </h2>
-                
-                <!-- 加载状态 -->
-                <div id="loading" class="hidden text-center py-12">
-                    <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mb-4"></div>
-                    <p class="text-gray-600">正在生成日语播客...</p>
-                    <p class="text-sm text-gray-500 mt-2">AI正在创建播客脚本并生成日语语音</p>
+            <!-- 加载状态 -->
+            <div id="loading" class="hidden bg-white rounded-xl shadow-lg p-8 text-center">
+                <div class="pulse-animation inline-block w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full mb-4 flex items-center justify-center">
+                    <i class="fas fa-microphone text-white text-2xl"></i>
                 </div>
+                <h3 class="text-xl font-semibold mb-2">ポッドキャストを生成中...</h3>
+                <p id="loadingMessage" class="text-gray-600">しばらくお待ちください。AIが作業しています</p>
+            </div>
 
-                <!-- 错误显示 -->
-                <div id="error" class="hidden bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                    <p class="text-red-600 font-medium">生成失败</p>
-                    <p id="errorMessage" class="text-red-500 text-sm mt-1"></p>
-                </div>
-
-                <!-- 成功结果 -->
-                <div id="result" class="hidden">
-                    <!-- 播客信息 -->
-                    <div class="bg-gradient-to-r from-purple-100 to-blue-100 rounded-lg p-4 mb-6">
-                        <div class="grid grid-cols-2 gap-4 text-center">
-                            <div>
-                                <div class="text-2xl font-bold text-purple-600" id="wordCount">0</div>
-                                <div class="text-sm text-gray-600">总字数</div>
-                            </div>
-                            <div>
-                                <div class="text-2xl font-bold text-blue-600" id="duration">0</div>
-                                <div class="text-sm text-gray-600">预估时长(分钟)</div>
-                            </div>
+            <!-- 错误显示 -->
+            <div id="error" class="hidden bg-white rounded-xl shadow-lg p-6">
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-exclamation-triangle text-red-500 mr-3"></i>
+                        <div>
+                            <h3 class="text-red-800 font-medium">生成に失敗しました</h3>
+                            <p id="errorMessage" class="text-red-600 text-sm mt-1"></p>
                         </div>
-                        <div class="mt-3 text-center">
-                            <div class="text-lg font-semibold text-gray-700" id="segmentInfo">对话片段数：0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 播客结果显示 -->
+            <div id="result" class="hidden">
+                <!-- 播客信息卡片 -->
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                    <div class="text-center mb-4">
+                        <h2 class="text-2xl font-semibold text-gray-800 mb-2">
+                            <i class="fas fa-podcast text-purple-500 mr-2"></i>
+                            ポッドキャストが完成しました
+                        </h2>
+                        <p class="text-gray-600">アキラとユウキの二人対話ポッドキャスト</p>
+                    </div>
+
+                    <!-- 统计信息 -->
+                    <div class="grid grid-cols-3 gap-4 mb-6">
+                        <div class="text-center p-3 bg-purple-50 rounded-lg">
+                            <div class="text-2xl font-bold text-purple-600" id="segmentCount">0</div>
+                            <div class="text-sm text-gray-600">会話セグメント</div>
+                        </div>
+                        <div class="text-center p-3 bg-blue-50 rounded-lg">
+                            <div class="text-2xl font-bold text-blue-600" id="totalDuration">0</div>
+                            <div class="text-sm text-gray-600">総時間(秒)</div>
+                        </div>
+                        <div class="text-center p-3 bg-green-50 rounded-lg">
+                            <div class="text-2xl font-bold text-green-600" id="wordCount">0</div>
+                            <div class="text-sm text-gray-600">スクリプト文字数</div>
                         </div>
                     </div>
 
                     <!-- 音频播放器区域 -->
-                    <div id="audioSection" class="mb-6">
-                        <h3 class="text-lg font-semibold mb-3 flex items-center">
+                    <div id="audioSection">
+                        <h3 class="text-lg font-semibold mb-4 flex items-center">
                             <i class="fas fa-headphones text-green-500 mr-2"></i>
-                            对话音频
+                            ポッドキャスト音声
                         </h3>
-                        <div id="audioSegments" class="space-y-3">
+                        <div id="audioList" class="space-y-3">
                             <!-- 音频片段将在这里动态生成 -->
                         </div>
                     </div>
+                </div>
 
-                    <!-- 对话脚本显示 -->
-                    <div class="mb-6">
-                        <h3 class="text-lg font-semibold mb-3 flex items-center">
-                            <i class="fas fa-scroll text-orange-500 mr-2"></i>
-                            对话脚本
-                        </h3>
-                        <div id="dialogueScript" class="space-y-2 max-h-96 overflow-y-auto border rounded-lg p-4">
-                            <!-- 对话内容将在这里显示 -->
-                        </div>
-                    </div>
-
-                    <!-- 完整脚本 -->
-                    <div>
-                        <h3 class="text-lg font-semibold mb-3 flex items-center">
-                            <i class="fas fa-file-text text-gray-500 mr-2"></i>
-                            完整脚本
-                            <button id="copyScript" class="ml-2 text-sm bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition-colors">
-                                <i class="fas fa-copy"></i> 复制
-                            </button>
-                        </h3>
-                        <div id="fullScript" class="bg-gray-50 rounded-lg p-4 text-sm max-h-48 overflow-y-auto border font-mono"></div>
+                <!-- 对话脚本显示 -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-scroll text-orange-500 mr-2"></i>
+                        会話スクリプト
+                        <button id="copyScript" class="ml-auto text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded transition-colors">
+                            <i class="fas fa-copy mr-1"></i>コピー
+                        </button>
+                    </h3>
+                    <div id="scriptDisplay" class="space-y-3 max-h-96 overflow-y-auto">
+                        <!-- 对话内容将在这里显示 -->
                     </div>
                 </div>
             </div>
@@ -177,592 +174,228 @@
 
     <script>
         // DOM元素
-        const textTab = document.getElementById('textTab');
-        const urlTab = document.getElementById('urlTab');
-        const textInput = document.getElementById('textInput');
         const urlInput = document.getElementById('urlInput');
         const generateBtn = document.getElementById('generateBtn');
-        const scrapeBtn = document.getElementById('scrapeBtn');
-        const testMiniMaxBtn = document.getElementById('testMiniMaxBtn');
+        const progressSection = document.getElementById('progressSection');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
         const loading = document.getElementById('loading');
+        const loadingMessage = document.getElementById('loadingMessage');
         const error = document.getElementById('error');
+        const errorMessage = document.getElementById('errorMessage');
         const result = document.getElementById('result');
-        
-        // 全局变量用于存储当前的音频片段状态
-        let currentAudioSegments = [];
-        let statusCheckInterval = null;
 
-        // 标签页切换
-        textTab.addEventListener('click', () => switchTab('text'));
-        urlTab.addEventListener('click', () => switchTab('url'));
+        // 生成播客主函数
+        generateBtn.addEventListener('click', async () => {
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                alert('有効なURLを入力してください');
+                return;
+            }
 
-        function switchTab(tab) {
-            if (tab === 'text') {
-                textTab.classList.add('active', 'bg-white', 'text-blue-600', 'shadow-sm');
-                textTab.classList.remove('text-gray-600');
-                urlTab.classList.remove('active', 'bg-white', 'text-blue-600', 'shadow-sm');
-                urlTab.classList.add('text-gray-600');
-                textInput.classList.remove('hidden');
-                urlInput.classList.add('hidden');
-            } else {
-                urlTab.classList.add('active', 'bg-white', 'text-blue-600', 'shadow-sm');
-                urlTab.classList.remove('text-gray-600');
-                textTab.classList.remove('active', 'bg-white', 'text-blue-600', 'shadow-sm');
-                textTab.classList.add('text-gray-600');
-                urlInput.classList.remove('hidden');
-                textInput.classList.add('hidden');
+            if (!isValidUrl(url)) {
+                alert('有効なウェブリンクを入力してください');
+                return;
+            }
+
+            // 开始生成流程
+            startGeneration(url);
+        });
+
+        // 验证URL格式
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
             }
         }
 
-        // 测试MiniMax API
-        testMiniMaxBtn.addEventListener('click', async () => {
-            const testResultDiv = document.getElementById('miniMaxTestResult');
-            const testContentDiv = document.getElementById('miniMaxTestContent');
-            
-            testMiniMaxBtn.disabled = true;
-            testMiniMaxBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>测试中...';
-            
-            testResultDiv.classList.remove('hidden');
-            testContentDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin mr-2"></i>正在测试MiniMax API...</div>';
-            
-            try {
-                const testData = {
-                    text: 'こんにちは、皆さん。今日は素晴らしい一日ですね。',
-                    voice: 'female',
-                    style: 'educational'
-                };
-                
-                // 直接调用生成API但使用特殊标记来触发测试模式
-                const response = await fetch('/api/generate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        content: testData.text,
-                        style: testData.style,
-                        voice: testData.voice,
-                        _test_mode: true
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok && data.success) {
-                    let resultHtml = '<div class="space-y-2">';
-                    resultHtml += '<div class="text-green-600"><i class="fas fa-check-circle mr-2"></i><strong>测试成功！</strong></div>';
-                    resultHtml += `<div><strong>脚本长度:</strong> ${data.script?.length || 0} 字符</div>`;
-                    resultHtml += `<div><strong>预估时长:</strong> ${data.duration || 0} 分钟</div>`;
-                    
-                    // 显示音频状态
-                    resultHtml += '<div class="mt-3"><strong>音频状态:</strong></div>';
-                    
-                    if (data.audioUrl) {
-                        resultHtml += '<div class="ml-4 text-green-600">';
-                        resultHtml += '• <i class="fas fa-check-circle mr-1"></i>音频生成成功';
-                        resultHtml += ` <span class="text-xs text-blue-500">[音频URL可用]</span>`;
-                        resultHtml += '</div>';
-                        
-                        // 添加音频播放器
-                        resultHtml += '<div class="mt-2 ml-4">';
-                        resultHtml += `<audio controls class="w-full max-w-md">`;
-                        resultHtml += `<source src="${data.audioUrl}" type="audio/mpeg">`;
-                        resultHtml += '您的浏览器不支持音频播放。';
-                        resultHtml += '</audio>';
-                        resultHtml += '</div>';
-                        
-                    } else if (data.taskId) {
-                        resultHtml += '<div class="ml-4 text-yellow-600">';
-                        resultHtml += '• <i class="fas fa-clock mr-1"></i>音频正在生成中';
-                        resultHtml += ` <span class="text-xs text-gray-500">[任务ID: ${data.taskId.substring(0, 8)}...]</span>`;
-                        resultHtml += '</div>';
-                        
-                    } else {
-                        resultHtml += '<div class="ml-4 text-gray-600">';
-                        resultHtml += '• <i class="fas fa-info-circle mr-1"></i>音频未生成';
-                        resultHtml += '</div>';
-                    }
-                    
-                    // 显示其他信息
-                    if (data.metadata) {
-                        resultHtml += '<div class="mt-3 text-sm text-gray-600">';
-                        resultHtml += `<strong>技术信息:</strong><br>`;
-                        resultHtml += `• 语音ID: ${data.metadata.voiceId || 'N/A'}<br>`;
-                        resultHtml += `• 语言: ${data.metadata.language || 'N/A'}<br>`;
-                        resultHtml += `• 是否异步任务: ${data.metadata.isAsyncTask ? '是' : '否'}`;
-                        resultHtml += '</div>';
-                    }
-                    
-                    resultHtml += '</div>';
-                    testContentDiv.innerHTML = resultHtml;
-                } else {
-                    testContentDiv.innerHTML = `<div class="text-red-600"><i class="fas fa-exclamation-circle mr-2"></i><strong>测试失败:</strong> ${data.error || '未知错误'}</div>`;
-                }
-                
-            } catch (err) {
-                testContentDiv.innerHTML = `<div class="text-red-600"><i class="fas fa-exclamation-triangle mr-2"></i><strong>测试异常:</strong> ${err.message}</div>`;
-            } finally {
-                testMiniMaxBtn.disabled = false;
-                testMiniMaxBtn.innerHTML = '<i class="fas fa-flask mr-2"></i>测试 MiniMax API';
-            }
-        });
-
-        // 抓取网页内容
-        scrapeBtn.addEventListener('click', async () => {
-            const url = document.getElementById('url').value.trim();
-            if (!url) {
-                alert('请输入有效的URL');
-                return;
-            }
-
-            scrapeBtn.disabled = true;
-            scrapeBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>抓取中...';
-
-            try {
-                const response = await fetch('/api/scrape', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ url })
-                });
-
-                const data = await response.json();
-                
-                if (data.success) {
-                    document.getElementById('content').value = data.content;
-                    switchTab('text');
-                    alert('网页内容抓取成功！');
-                } else {
-                    alert('抓取失败: ' + data.error);
-                }
-            } catch (err) {
-                alert('抓取失败: ' + err.message);
-            } finally {
-                scrapeBtn.disabled = false;
-                scrapeBtn.innerHTML = '<i class="fas fa-download mr-2"></i>抓取内容';
-            }
-        });
-
-        // 生成播客
-        generateBtn.addEventListener('click', async () => {
-            const content = document.getElementById('content').value.trim();
-            const style = document.getElementById('style').value;
-
-            if (!content) {
-                alert('请输入内容');
-                return;
-            }
-
-            if (content.length < 100) {
-                alert('内容太短，请输入至少100字符的内容');
-                return;
-            }
-
+        // 开始生成流程
+        async function startGeneration(url) {
             // 隐藏之前的结果
             hideAllSections();
+            
+            // 显示加载状态
             loading.classList.remove('hidden');
             generateBtn.disabled = true;
             generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>生成中...';
 
             try {
-                const response = await fetch('/api/generate', {
+                // 调用一体化API
+                progressSection.classList.remove('hidden');
+                setProgress(5, 'ウェブページを取得中');
+
+                // 动态递增到55%
+                let dynamicPercent = 5;
+                const progressTimer = setInterval(()=>{
+                    if(dynamicPercent < 55){
+                        dynamicPercent += 2;
+                        setProgress(dynamicPercent, 'AI処理中');
+                    }
+                }, 1000);
+                const response = await fetch('/api/generate-podcast-from-url', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        content,
-                        style,
-                        voice: 'female'
-                    })
+                    body: JSON.stringify({ url })
                 });
 
+                clearInterval(progressTimer);
+                setProgress(60, 'スクリプト・音声生成中');
                 const data = await response.json();
 
                 if (data.success) {
+                    setProgress(90, '音声統合中');
                     displayPodcastResult(data);
+                    setProgress(100, '完了');
                 } else {
-                    showError(data.error || '生成失败');
+                    showError(data.error || '生成に失敗しました。再試行してください');
                 }
+
             } catch (err) {
-                showError('请求失败: ' + err.message);
+                showError('ネットワークエラー: ' + err.message);
             } finally {
                 loading.classList.add('hidden');
                 generateBtn.disabled = false;
-                generateBtn.innerHTML = '<i class="fas fa-magic mr-2"></i>生成日语播客';
+                generateBtn.innerHTML = '<i class="fas fa-magic mr-3"></i>二人ポッドキャストを生成';
             }
-        });
+        }
+
+        // 更新加载信息
+        function updateLoadingMessage(message) {
+            loadingMessage.textContent = message;
+        }
 
         // 显示播客结果
         function displayPodcastResult(data) {
+            console.log('播客数据:', data);
+
+            // 更新统计信息
+            document.getElementById('segmentCount').textContent = data.audioSegments?.length || 0;
+            document.getElementById('totalDuration').textContent = data.totalDuration || 0;
             document.getElementById('wordCount').textContent = data.wordCount || 0;
-            document.getElementById('duration').textContent = data.duration || 0;
-            document.getElementById('segmentInfo').textContent = 
-                '脚本长度：' + (data.script?.length || 0) + ' 字符 | 音频状态：' + (data.audioUrl ? '已生成' : data.taskId ? '生成中' : '未生成');
 
-            // 显示单个音频播放器
-            displaySingleAudio(data);
-            
-            // 隐藏对话相关的显示区域
-            document.getElementById('dialogueScript').innerHTML = '<p class="text-gray-500 text-center py-4">单人播客模式</p>';
-            
-            document.getElementById('fullScript').textContent = data.script || '';
-            result.classList.remove('hidden');
-            
-            // 如果有异步任务，启动状态检查
-            if (data.taskId) {
-                startSingleAudioStatusPolling(data.taskId);
-            }
-        }
+            // 显示音频片段
+            const audioListEl = document.getElementById('audioList');
+            audioListEl.innerHTML = '';
 
-        // 显示单个音频播放器
-        function displaySingleAudio(data) {
-            const container = document.getElementById('audioSegments');
-            container.innerHTML = '';
+            if (data.finalAudioUrl) {
+                // 将 base64 DataURL 转为 Blob，避免 fetch 长 URL 失败
+                const base64 = data.finalAudioUrl.split(',')[1];
+                const byteChars = atob(base64);
+                const byteNums = new Uint8Array(byteChars.length);
+                for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
+                const blob = new Blob([byteNums], { type: 'audio/mpeg' });
+                const blobUrl = URL.createObjectURL(blob);
 
-            if (data.audioUrl) {
-                const audioHtml = '<div class="bg-green-50 rounded-lg p-4 shadow-sm">' +
-                    '<div class="flex items-center justify-between mb-2">' +
-                    '<span class="font-semibold text-gray-700 flex items-center">' +
-                    '<i class="fas fa-microphone text-green-500 mr-2"></i>' +
-                    '日语播客音频' +
-                    '</span>' +
-                    '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">已完成</span>' +
-                    '</div>' +
-                    '<audio controls class="w-full">' +
-                    '<source src="' + data.audioUrl + '" type="audio/mpeg">' +
-                    '您的浏览器不支持音频播放。' +
-                    '</audio>' +
-                    '</div>';
-                container.innerHTML = audioHtml;
-            } else if (data.taskId) {
-                const loadingHtml = '<div class="bg-yellow-50 rounded-lg p-4 shadow-sm">' +
-                    '<div class="flex items-center justify-between mb-2">' +
-                    '<span class="font-semibold text-gray-700 flex items-center">' +
-                    '<i class="fas fa-clock text-yellow-500 mr-2"></i>' +
-                    '日语播客音频' +
-                    '</span>' +
-                    '<span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">生成中</span>' +
-                    '</div>' +
-                    '<div class="bg-yellow-100 border border-yellow-200 rounded-lg p-3 text-center">' +
-                    '<i class="fas fa-spinner fa-spin text-yellow-500 mr-2"></i>' +
-                    '<span class="text-yellow-700">音频正在生成中，任务ID: ' + data.taskId.substring(0, 8) + '...</span>' +
-                    '</div>' +
-                    '</div>';
-                container.innerHTML = loadingHtml;
-            } else {
-                container.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-volume-mute text-4xl mb-2"></i><p>暂无音频</p><p class="text-sm">音频生成可能失败或未启用</p></div>';
-            }
-        }
+                audioListEl.innerHTML = `
+                  <div class="audio-player rounded-lg p-4 text-white text-center">
+                      <p class="mb-3 font-semibold">ポッドキャスト全編音声</p>
+                      <audio controls class="w-full mb-4">
+                          <source src="${blobUrl}" type="audio/mpeg">
+                          お使いのブラウザは音声再生に対応していません
+                      </audio>
+                      <button id="downloadBtn" class="bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg text-sm">
+                          <i class="fas fa-download mr-1"></i>MP3をダウンロード
+                      </button>
+                  </div>`;
 
-        // 单个音频任务状态轮询
-        function startSingleAudioStatusPolling(taskId) {
-            if (!taskId) return;
-            
-            console.log('开始轮询单个音频任务:', taskId);
-            
-            // 清除之前的轮询
-            if (statusCheckInterval) {
-                clearInterval(statusCheckInterval);
-            }
-            
-            // 开始新的轮询，每10秒检查一次
-            statusCheckInterval = setInterval(() => checkSingleAudioStatus(taskId), 10000);
-            
-            // 立即执行一次检查
-            checkSingleAudioStatus(taskId);
-        }
-
-        async function checkSingleAudioStatus(taskId) {
-            try {
-                const response = await fetch('/api/check-audio-status', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        taskIds: [taskId]
-                    })
+                // 绑定下载按钮
+                const downloadBtn = document.getElementById('downloadBtn');
+                downloadBtn.addEventListener('click', () => {
+                    const a = document.createElement('a');
+                    a.href = blobUrl;
+                    a.download = 'podcast.mp3';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
                 });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success && data.results && data.results.length > 0) {
-                        const result = data.results[0];
-                        
-                        if (result.status === 'Success' && result.audioUrl) {
-                            // 任务完成，更新显示
-                            console.log('音频生成完成:', result.audioUrl);
-                            displaySingleAudio({ audioUrl: result.audioUrl });
-                            
-                            // 停止轮询
-                            if (statusCheckInterval) {
-                                clearInterval(statusCheckInterval);
-                                statusCheckInterval = null;
-                            }
-                            
-                            // 更新统计信息
-                            document.getElementById('segmentInfo').textContent = 
-                                '脚本长度：' + (document.getElementById('fullScript').textContent.length || 0) + ' 字符 | 音频状态：已生成';
-                                
-                        } else if (result.status === 'Failed') {
-                            console.log('音频生成失败:', result.errorMessage);
-                            displaySingleAudio({ error: result.errorMessage });
-                            
-                            // 停止轮询
-                            if (statusCheckInterval) {
-                                clearInterval(statusCheckInterval);
-                                statusCheckInterval = null;
-                            }
-                        }
-                        // Processing状态继续轮询
-                    }
-                }
-            } catch (error) {
-                console.error('状态检查异常:', error);
+            } else {
+                audioListEl.innerHTML =
+                  '<div class="text-center py-8 text-gray-500"><i class="fas fa-exclamation-triangle text-2xl mb-2"></i><p>音声生成に失敗しました</p></div>';
             }
+
+            // 显示对话脚本
+            if (data.dialogueSegments && data.dialogueSegments.length > 0) {
+                displayScript(data.dialogueSegments);
+            }
+
+            // 显示结果
+            result.classList.remove('hidden');
         }
 
         // 显示音频片段
         function displayAudioSegments(audioSegments) {
-            const container = document.getElementById('audioSegments');
+            const container = document.getElementById('audioList');
             container.innerHTML = '';
 
-            if (!audioSegments || audioSegments.length === 0) {
-                container.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-volume-mute text-4xl mb-2"></i><p>暂无音频片段</p><p class="text-sm">音频生成可能需要更多时间，或正在后台处理中</p></div>';
-                return;
-            }
-
             audioSegments.forEach((segment, index) => {
-                // 验证segment对象
-                if (!segment) {
-                    console.warn('跳过null segment，index:', index);
-                    return;
-                }
-
-                if (!segment.speaker) {
-                    console.warn('跳过缺少speaker的segment:', segment);
-                    return;
-                }
-
-                const speakerInfo = segment.speaker === '主持人A' ? 
-                    { name: '主持人A', icon: 'fa-female', color: 'pink', bgColor: 'dialogue-a' } :
-                    segment.speaker === '主持人B' ?
-                    { name: '主持人B', icon: 'fa-male', color: 'blue', bgColor: 'dialogue-b' } :
-                    { name: segment.speaker || 'Unknown', icon: 'fa-user', color: 'gray', bgColor: 'bg-gray-100' };
-
-                let statusBadge = '';
-                let audioPlayer = '';
+                const isAkira = segment.speaker === 'アキラ';
+                const speakerClass = isAkira ? 'speaker-akira' : 'speaker-yuuki';
+                const iconClass = isAkira ? 'fa-female' : 'fa-male';
                 
-                if (segment.status === 'completed' && segment.audioUrl) {
-                    statusBadge = '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">已完成</span>';
-                    audioPlayer = '<audio controls class="w-full">' +
-                        '<source src="' + segment.audioUrl + '" type="audio/mpeg">' +
-                        '您的浏览器不支持音频播放。' +
-                        '</audio>';
-                } else if (segment.status === 'pending' && segment.taskId) {
-                    statusBadge = '<span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">处理中</span>';
-                    audioPlayer = '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">' +
-                        '<i class="fas fa-clock text-yellow-500 mr-2"></i>' +
-                        '<span class="text-yellow-700">音频正在生成中，任务ID: ' + segment.taskId + '</span>' +
-                        '</div>';
-                } else if (segment.status === 'failed') {
-                    statusBadge = '<span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">失败</span>';
-                    audioPlayer = '<div class="bg-red-50 border border-red-200 rounded-lg p-3 text-center text-red-600">' +
-                        '<i class="fas fa-exclamation-triangle mr-2"></i>音频生成失败' +
-                        '</div>';
-                } else {
-                    statusBadge = '<span class="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full">未知状态</span>';
-                    audioPlayer = '<div class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center text-gray-600">' +
-                        '<i class="fas fa-question-circle mr-2"></i>音频状态未知' +
-                        '</div>';
-                }
-
-                const segmentHtml = '<div class="audio-segment ' + speakerInfo.bgColor + ' rounded-lg p-4 shadow-sm">' +
-                    '<div class="flex items-center justify-between mb-2">' +
-                    '<span class="font-semibold text-gray-700 flex items-center">' +
-                    '<i class="fas ' + speakerInfo.icon + ' text-' + speakerInfo.color + '-500 mr-2"></i>' +
-                    speakerInfo.name + ' - 片段 ' + (index + 1) +
-                    '</span>' +
-                    statusBadge +
-                    '</div>' +
-                    '<p class="text-sm text-gray-600 mb-3">' + segment.text.substring(0, 100) + (segment.text.length > 100 ? '...' : '') + '</p>' +
-                    audioPlayer +
-                    '</div>';
+                const segmentHtml = `
+                <div class="${speakerClass} rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-semibold flex items-center">
+                            <i class="fas ${iconClass} mr-2"></i>
+                            ${segment.speaker} - セグメント ${index + 1}
+                        </span>
+                        <span class="text-xs bg-white bg-opacity-50 px-2 py-1 rounded">${segment.duration || 0}秒</span>
+                    </div>
+                    <p class="text-sm text-gray-700 mb-3">${segment.text}</p>
+                    ${segment.audioUrl ? 
+                        `<audio controls class="w-full">
+                            <source src="${segment.audioUrl}" type="audio/mpeg">
+                            お使いのブラウザは音声再生に対応していません
+                         </audio>` : 
+                        '<div class="bg-red-100 text-red-600 p-2 rounded text-sm">音声生成に失敗しました</div>'
+                    }
+                </div>`;
+                
                 container.insertAdjacentHTML('beforeend', segmentHtml);
             });
         }
 
         // 显示对话脚本
-        function displayDialogueScript(dialogues) {
-            const container = document.getElementById('dialogueScript');
+        function displayScript(dialogueSegments) {
+            const container = document.getElementById('scriptDisplay');
             container.innerHTML = '';
 
-            if (!dialogues || dialogues.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-4">暂无对话内容</p>';
-                return;
-            }
-
-            dialogues.forEach((dialogue, index) => {
-                // 验证dialogue对象
-                if (!dialogue) {
-                    console.warn('跳过null dialogue，index:', index);
-                    return;
-                }
-
-                if (!dialogue.speaker) {
-                    console.warn('跳过缺少speaker的dialogue:', dialogue);
-                    return;
-                }
-
-                const speakerInfo = dialogue.speaker === '主持人A' ? 
-                    { name: '主持人A', icon: 'fa-female', color: 'pink-500', bgClass: 'dialogue-a' } :
-                    dialogue.speaker === '主持人B' ?
-                    { name: '主持人B', icon: 'fa-male', color: 'blue-500', bgClass: 'dialogue-b' } :
-                    { name: dialogue.speaker || 'Unknown', icon: 'fa-user', color: 'gray-500', bgClass: 'bg-gray-100' };
-
-                const partHtml = '<div class="' + speakerInfo.bgClass + ' rounded-lg p-3 border-l-4 border-' + speakerInfo.color + ' mb-2">' +
-                    '<div class="font-semibold text-gray-700 mb-1 flex items-center">' +
-                    '<i class="fas ' + speakerInfo.icon + ' text-' + speakerInfo.color + ' mr-2"></i>' +
-                    speakerInfo.name + ' <span class="ml-2 text-xs text-gray-500">(第' + (index + 1) + '段)</span>' +
-                    '</div>' +
-                    '<p class="text-gray-700">' + dialogue.text + '</p>' +
-                    '</div>';
-                container.insertAdjacentHTML('beforeend', partHtml);
+            dialogueSegments.forEach((segment, index) => {
+                const isAkira = segment.speaker === 'akira';
+                const speakerClass = isAkira ? 'speaker-akira' : 'speaker-yuuki';
+                const iconClass = isAkira ? 'fa-female' : 'fa-male';
+                const speakerName = isAkira ? 'アキラ' : 'ユウキ';
+                
+                const segmentHtml = `
+                <div class="${speakerClass} rounded-lg p-3">
+                    <div class="font-semibold text-gray-700 mb-1 flex items-center">
+                        <i class="fas ${iconClass} mr-2"></i>
+                        ${speakerName}
+                    </div>
+                    <p class="text-gray-700">${segment.text}</p>
+                </div>`;
+                
+                container.insertAdjacentHTML('beforeend', segmentHtml);
             });
-        }
-
-        // 音频状态轮询相关函数
-        function startAudioStatusPolling() {
-            const pendingTasks = currentAudioSegments.filter(segment => 
-                segment.status === 'pending' && segment.taskId
-            );
-            
-            if (pendingTasks.length === 0) {
-                return; // 没有pending的任务，不需要轮询
-            }
-            
-            console.log('开始轮询', pendingTasks.length, '个pending音频任务');
-            
-            // 清除之前的轮询
-            if (statusCheckInterval) {
-                clearInterval(statusCheckInterval);
-            }
-            
-            // 开始新的轮询，每10秒检查一次
-            statusCheckInterval = setInterval(checkAudioStatus, 10000);
-            
-            // 立即执行一次检查
-            checkAudioStatus();
-        }
-
-        async function checkAudioStatus() {
-            const pendingTasks = currentAudioSegments.filter(segment => 
-                segment.status === 'pending' && segment.taskId
-            );
-            
-            if (pendingTasks.length === 0) {
-                // 没有pending的任务了，停止轮询
-                if (statusCheckInterval) {
-                    clearInterval(statusCheckInterval);
-                    statusCheckInterval = null;
-                }
-                return;
-            }
-            
-            const taskIds = pendingTasks.map(task => task.taskId);
-            
-            try {
-                const response = await fetch('/api/check-audio-status', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        taskIds: taskIds
-                    })
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success) {
-                        updateAudioSegmentStatus(data.results);
-                        
-                        // 如果还有processing的任务，继续轮询
-                        const stillProcessing = data.results.filter(r => r.status === 'Processing').length;
-                        console.log('状态检查完成，仍在处理中:', stillProcessing, '个任务');
-                        
-                        if (stillProcessing === 0) {
-                            // 所有任务都完成了，停止轮询
-                            if (statusCheckInterval) {
-                                clearInterval(statusCheckInterval);
-                                statusCheckInterval = null;
-                            }
-                        }
-                    }
-                } else {
-                    console.error('状态检查失败:', await response.text());
-                }
-            } catch (error) {
-                console.error('状态检查异常:', error);
-            }
-        }
-
-        function updateAudioSegmentStatus(statusResults) {
-            let hasUpdates = false;
-            
-            if (!statusResults || !Array.isArray(statusResults)) {
-                console.warn('Invalid statusResults:', statusResults);
-                return;
-            }
-            
-            statusResults.forEach(result => {
-                if (!result || !result.taskId) {
-                    console.warn('跳过invalid result:', result);
-                    return;
-                }
-
-                const segmentIndex = currentAudioSegments.findIndex(segment => 
-                    segment && segment.taskId === result.taskId
-                );
-                
-                if (segmentIndex !== -1 && currentAudioSegments[segmentIndex]) {
-                    const oldStatus = currentAudioSegments[segmentIndex].status;
-                    
-                    if (result.status === 'Success' && result.audioUrl) {
-                        currentAudioSegments[segmentIndex].status = 'completed';
-                        currentAudioSegments[segmentIndex].audioUrl = result.audioUrl;
-                        hasUpdates = true;
-                    } else if (result.status === 'Failed' || result.status === 'error') {
-                        currentAudioSegments[segmentIndex].status = 'failed';
-                        currentAudioSegments[segmentIndex].errorMessage = result.errorMessage;
-                        hasUpdates = true;
-                    }
-                    // Processing状态保持不变
-                    
-                    if (oldStatus !== currentAudioSegments[segmentIndex].status) {
-                        console.log(`任务 ${result.taskId} 状态从 ${oldStatus} 更新为 ${currentAudioSegments[segmentIndex].status}`);
-                    }
-                }
-            });
-            
-            if (hasUpdates) {
-                // 重新渲染音频片段
-                displayAudioSegments(currentAudioSegments);
-                
-                // 更新统计信息
-                const completedCount = currentAudioSegments.filter(s => s.status === 'completed').length;
-                document.getElementById('segmentInfo').textContent = 
-                    '对话片段数：' + currentAudioSegments.length + ' | 已生成音频：' + completedCount;
-            }
         }
 
         // 复制脚本功能
         document.getElementById('copyScript').addEventListener('click', () => {
-            const script = document.getElementById('fullScript').textContent;
-            navigator.clipboard.writeText(script).then(() => {
+            const scriptElement = document.getElementById('scriptDisplay');
+            const scriptText = Array.from(scriptElement.children)
+                .map(child => child.textContent)
+                .join('\n\n');
+            
+            navigator.clipboard.writeText(scriptText).then(() => {
                 const btn = document.getElementById('copyScript');
                 const originalText = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-check"></i> 已复制';
+                btn.innerHTML = '<i class="fas fa-check mr-1"></i>コピーしました';
                 setTimeout(() => {
                     btn.innerHTML = originalText;
                 }, 2000);
@@ -774,40 +407,18 @@
             loading.classList.add('hidden');
             error.classList.add('hidden');
             result.classList.add('hidden');
+            progressSection.classList.add('hidden');
         }
 
         function showError(message) {
             error.classList.remove('hidden');
-            document.getElementById('errorMessage').textContent = message;
+            errorMessage.textContent = message;
         }
 
-        // 页面卸载时清理定时器
-        window.addEventListener('beforeunload', () => {
-            if (statusCheckInterval) {
-                clearInterval(statusCheckInterval);
-            }
-        });
-
-        // 页面隐藏时暂停轮询，显示时恢复
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                // 页面隐藏，暂停轮询
-                if (statusCheckInterval) {
-                    clearInterval(statusCheckInterval);
-                    statusCheckInterval = null;
-                }
-            } else {
-                // 页面显示，如果有pending任务则恢复轮询
-                if (currentAudioSegments.some(s => s.status === 'pending')) {
-                    startAudioStatusPolling();
-                }
-            }
-        });
-
-        // 样式
-        const style = document.createElement('style');
-        style.textContent = '.tab-button.active { background: white; color: #2563eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1); } .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }';
-        document.head.appendChild(style);
+        function setProgress(percent, text) {
+            progressBar.style.width = percent + '%';
+            progressText.textContent = text + ' ' + percent + '%';
+        }
     </script>
 </body>
 </html>
