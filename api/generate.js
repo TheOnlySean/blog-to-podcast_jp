@@ -101,9 +101,25 @@ export default async function handler(req, res) {
       }
     };
 
-    // 选择合适的日语语音ID
-    const voiceId = japaneseVoiceMapping[voice]?.[style] || 
-                           (voice === 'female' ? 'moss_audio_d3f65edb-4c57-11f0-acba-96daea575b6a' : 'moss_audio_eabf88cc-4c59-11f0-b862-46ba4da2d9df');
+    // 选择合适的日语语音ID，添加详细的fallback逻辑
+    let voiceId;
+    
+    // 首先尝试从映射中获取
+    if (japaneseVoiceMapping[voice] && japaneseVoiceMapping[voice][style]) {
+      voiceId = japaneseVoiceMapping[voice][style];
+    } else {
+      // 如果映射失败，使用默认值
+      voiceId = (voice === 'female') ? 
+        'moss_audio_d3f65edb-4c57-11f0-acba-96daea575b6a' : 
+        'moss_audio_eabf88cc-4c59-11f0-b862-46ba4da2d9df';
+    }
+    
+    // 最后的安全检查
+    if (!voiceId) {
+      voiceId = 'moss_audio_d3f65edb-4c57-11f0-acba-96daea575b6a'; // 默认使用女性声音
+    }
+    
+    console.log('选择的语音ID:', voiceId, '语音类型:', voice, '风格:', style);
     
     if (process.env.MINIMAX_API_KEY) {
       try {
