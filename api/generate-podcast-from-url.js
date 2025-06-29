@@ -36,7 +36,7 @@ export default async function handler(req, res) {
         'name': 'アキラ',
         'gender': 'female',
         'voice_id': 'moss_audio_d3f65edb-4c57-11f0-acba-96daea575b6a', // 用户指定女性语音
-        'personality': 'かわいくて天真爛漫。分からないことがあれば素直に質問し、会話をほのぼのさせる'
+        'personality': 'かわいくて天真爛漫で、知識はまだ浅い。分からないことがあれば素直に質問し、会話を明るくする'
       },
       'yuuki': {
         'name': 'ユウキ',
@@ -101,6 +101,7 @@ export default async function handler(req, res) {
 
 ## スタイルガイド
 - ニュース本文を「朗読」せず、必ず二人の意見や感想を混ぜる
+- **二人はしばしば意見が食い違い、軽い議論やツッコミを交わす**（互いに100%同意しない）
 - アキラは素朴な疑問や可愛いリアクションを挟む
 - ユウキは経験談や批判的視点で掘り下げる
 - 一人あたり 2〜4 文でテンポ良く交互に話す
