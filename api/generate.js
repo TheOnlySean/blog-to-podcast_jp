@@ -95,8 +95,8 @@ export default async function handler(req, res) {
     
     if (process.env.MINIMAX_API_KEY) {
       try {
-        // 使用MiniMax-MCP-JS推荐的API主机
-        const minimaxHost = process.env.MINIMAX_API_HOST || 'https://api.minimaxi.chat';
+        // 使用MiniMax全球版API主机
+        const minimaxHost = process.env.MINIMAX_API_HOST || 'https://api.minimax.io';
         
         console.log('使用MiniMax API主机:', minimaxHost);
         console.log('使用语音ID:', selectedVoiceId);
@@ -156,7 +156,7 @@ export default async function handler(req, res) {
               await new Promise(resolve => setTimeout(resolve, 3000)); // 等待3秒
               
               try {
-                const statusResponse = await fetch(`${minimaxHost}/v1/text_to_speech/task/${taskId}`, {
+                const statusResponse = await fetch(`${minimaxHost}/v1/text_to_speech/${taskId}`, {
                   method: 'GET',
                   headers: {
                     'Authorization': `Bearer ${process.env.MINIMAX_API_KEY}`,

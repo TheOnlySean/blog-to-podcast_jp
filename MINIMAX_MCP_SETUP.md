@@ -9,8 +9,7 @@
 
 | 区域 | API 密钥获取 | API 主机 |
 |------|-------------|----------|
-| 全球版 | [MiniMax Global](https://www.minimax.io/platform/user-center/basic-information/interface-key) | `https://api.minimaxi.chat` (注意多了一个"i") |
-| 中国版 | [MiniMax 中国](https://platform.minimaxi.com/user-center/basic-information/interface-key) | `https://api.minimax.chat` |
+| 全球版 | [MiniMax Global](https://www.minimax.io/platform/user-center/basic-information/interface-key) | `https://api.minimaxi.io` |
 
 ## 🛠️ Vercel 环境变量设置
 
@@ -23,10 +22,8 @@ OPENAI_API_KEY=your_openai_api_key_here
 # MiniMax API Key (用于语音合成)
 MINIMAX_API_KEY=your_minimax_api_key_here
 
-# MiniMax API Host (根据您的区域选择)
-# 全球版：https://api.minimaxi.chat
-# 中国版：https://api.minimax.chat
-MINIMAX_API_HOST=https://api.minimaxi.chat
+# MiniMax API Host (全球版)
+MINIMAX_API_HOST=https://api.minimax.io
 ```
 
 ## 🎯 支持的功能
@@ -80,9 +77,8 @@ MINIMAX_API_HOST=https://api.minimaxi.chat
 ## 🔧 故障排除
 
 ### 1. Invalid API Key 错误
-- 确认 `MINIMAX_API_KEY` 和 `MINIMAX_API_HOST` 区域匹配
-- 全球版用户使用: `https://api.minimaxi.chat`
-- 中国版用户使用: `https://api.minimax.chat`
+- 确认 `MINIMAX_API_KEY` 和 `MINIMAX_API_HOST` 匹配
+- 全球版用户使用: `https://api.minimax.io`
 
 ### 2. 语音生成失败
 - 检查文本长度（建议 1500-2500 字符）

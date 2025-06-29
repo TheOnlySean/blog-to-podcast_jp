@@ -18,17 +18,9 @@
 MINIMAX_API_HOST=https://api.minimaxi.com
 ```
 
-**新值（根据您的区域选择）**：
-
-#### 如果您使用全球版 MiniMax：
+**新值（全球版 MiniMax）**：
 ```
-MINIMAX_API_HOST=https://api.minimaxi.chat
-```
-**注意**：多了一个 "i"
-
-#### 如果您使用中国版 MiniMax：
-```
-MINIMAX_API_HOST=https://api.minimax.chat
+MINIMAX_API_HOST=https://api.minimax.io
 ```
 
 ### 3. 确认其他环境变量
@@ -42,8 +34,8 @@ OPENAI_API_KEY=your_openai_api_key_here
 # MiniMax API Key  
 MINIMAX_API_KEY=your_minimax_api_key_here
 
-# MiniMax API Host (根据上面的指引更新)
-MINIMAX_API_HOST=https://api.minimaxi.chat
+# MiniMax API Host (全球版)
+MINIMAX_API_HOST=https://api.minimax.io
 ```
 
 ## 🚀 更新后的步骤
