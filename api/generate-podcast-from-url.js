@@ -89,7 +89,7 @@ export default async function handler(req, res) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o',
+          model: 'gpt-4.1-mini',
           messages: [
             {
               role: 'system',
@@ -101,9 +101,9 @@ export default async function handler(req, res) {
 
 ## スタイルガイド
 - ニュース本文を「朗読」せず、必ず二人の意見や感想を混ぜる
-- **二人はしばしば意見が食い違い、議論やツッコミを交わす**（全部互いに同意しない）
-- アキラは素朴な疑問や可愛いリアクションを挟む
-- ユウキは経験談や批判的視点で掘り下げる
+- 二人の意見が対立するポイントを用意し、議論やツッコミが生まれるようにする
+- アキラ：かわいくて天真爛漫で、知識はまだ浅い。分からないことがあれば素直に質問し、会話を明るくする
+- ユウキ：落ち着いた語り口の頼れる兄貴分。実体験や独自の視点を交え、深い洞察を述べる
 - 一人あたり 2〜4 文でテンポ良く交互に話す
 
 ## 重要な形式要求
